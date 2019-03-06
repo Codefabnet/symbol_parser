@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 void
@@ -46,6 +47,41 @@ void print_file_symbols_function(struct symbol_def *s_table) {
 
     if (s_table->sym_type == func) {
         printf("%d\t%s\n", s_table->linenum, s_table->name);
+        printf("%\t%s\n", s_table->prototype);
+       switch (s_table->sym_type) {
+           case macro:
+               printf("symbol type = macro\n");
+               break;
+
+           case var:
+               printf("symbol type = var\n");
+               break;
+
+           case func:
+               printf("symbol type = func\n");
+               break;
+
+           case proto:
+               printf("symbol type = proto\n");
+               break;
+
+           case strct:
+               printf("symbol type = struct\n");
+               break;
+
+           case member:
+               printf("symbol type = struct member\n");
+               break;
+
+           case enm:
+               printf("symbol type = enum\n");
+               break;
+
+           case enmm:
+               printf("symbol type = enum member\n");
+               break;
+
+       };
     }
 
 }
@@ -100,6 +136,84 @@ void print_file_symbols_table(struct symbol_def *s_table) {
 
 }
 
+//char *parse_proto_string( char *bufptr )
+uint32_t parse_proto_string( char *bufptr )
+{
+    char *ds_ptr = NULL;
+
+    if ((NULL != (ds_ptr = strchr(bufptr, ';')))) {
+        *(ds_ptr + 1) = '\0';
+    }
+    if ((NULL != (ds_ptr = strchr(bufptr, '$')))) {
+        if (*(ds_ptr - 1) != ';') {
+            *ds_ptr++ = ';';
+        }
+        *ds_ptr = '\0';
+    }
+    if (bufptr[0] == '/') {
+        bufptr += 2;
+    }
+
+    return (uint32_t)bufptr;
+}
+
+uint32_t parse_symbol_type( char *bufptr )
+{
+   uint32_t rval = 0;
+
+    switch ((char)*bufptr) {
+        case 'd':
+            rval = macro;
+            break;
+
+        case 'v':
+            rval = var;
+            break;
+
+        case 'f':
+            rval = func;
+            break;
+
+        case 'p':
+            rval = proto;
+            break;
+
+        case 's':
+            rval = strct;
+            break;
+
+        case 'm':
+            rval = member;
+            break;
+
+        case 'g':
+            rval = enm;
+            break;
+
+        case 'e':
+            rval = enmm;
+            break;
+
+   };
+
+   return rval; 
+}
+
+uint32_t parse_line_number( char *bufptr )
+{
+   return strtol(strchr(bufptr, ':')+1, NULL, 10);
+}
+
+uint32_t parse_default( char *bufptr )
+{
+   return (uint32_t)bufptr;
+}
+
+typedef struct line_schema_t {
+   void **symbol;
+   char *delimiter;
+   uint32_t(*parse_function)(char *bufptr);
+}line_schema;
 
 
 #define BUFSIZE 120
@@ -115,12 +229,30 @@ void read_data (FILE * stream)
 
     count = getline(&bufptr, &bufsize, stream);
 
+    line_schema funcs_schema[] = {
+       {(void**)&s_table.name, "\t", parse_default},
+       {(void**)&s_table.filename, "\t", parse_default},
+       {(void**)&s_table.prototype, "\t", parse_proto_string},
+       {(void**)&s_table.sym_type, "\t", parse_symbol_type},
+       {(void**)&s_table.linenum, "\t", parse_line_number},
+       {NULL, NULL, NULL}
+    };
 
     while (count != -1) {
         int i=0;
 //        printf("-----------------------------------------------\n");
 //        printf("%d: %s\n", count, bufptr);
 
+        if (funcs_schema[0].delimiter) {
+           do {
+              if (i != 0) {
+                  bufptr = NULL;
+              }
+              bufptr = strtok(bufptr, funcs_schema[i].delimiter); 
+              *funcs_schema[i].symbol = (void*)funcs_schema[i].parse_function(bufptr); 
+           } while (funcs_schema[++i].delimiter);
+        }
+#if 0        
         // first field: name.    
         bufptr = strtok(bufptr, "\t"); 
         s_table.name = bufptr;
@@ -133,9 +265,10 @@ void read_data (FILE * stream)
     //    printf("%s\n", bufptr);
 
 
-        // thrid field: prototype.    
+        // third field: prototype.    
         bufptr = strtok(NULL, "\t"); 
     //    printf("%s\n", bufptr);
+#if 0
         if ((NULL != (ds_ptr = strchr(bufptr, ';')))) {
             *(ds_ptr + 1) = '\0';
         }
@@ -148,10 +281,13 @@ void read_data (FILE * stream)
         if (bufptr[0] == '/') {
             bufptr += 2;
         }
-        s_table.prototype = bufptr;
+#endif
+        s_table.prototype = (char *)parse_proto_string(bufptr);
 
         // fourth field: file.    
         bufptr = strtok(NULL, "\t"); 
+        s_table.sym_type = parse_symbol_type(bufptr);
+#if 0
         switch ((char)*bufptr) {
             case 'd':
                 s_table.sym_type = macro;
@@ -185,13 +321,16 @@ void read_data (FILE * stream)
                 s_table.sym_type = enmm;
                 break;
 
-        };
+       };
+#endif
 
 
         // fifth field: file.    
         bufptr = strtok(NULL, "\t"); 
-        s_table.linenum = strtol(strchr(bufptr, ':')+1, NULL, 10);
+//        s_table.linenum = strtol(strchr(bufptr, ':')+1, NULL, 10);
+        s_table.linenum = parse_line_number(bufptr);
 //        print_file_symbols_table(&s_table);
+#endif
         print_file_symbols_function(&s_table);
         count = getline(&bufptr, &bufsize, stream);
     }
