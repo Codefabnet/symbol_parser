@@ -46,6 +46,7 @@ enum funcs_fields {
 
 #define BUFSIZE 120
 struct symbol_def {
+    struct symbol_def *next;
     char *bufptr;
     uint8_t count;
     char *name;
@@ -54,7 +55,73 @@ struct symbol_def {
     enum symboltype sym_type;
     int linenum;
 };
+
 typedef struct symbol_def symbol_def_t;
+
+symbol_def_t *symbol_table_head = NULL;
+
+
+symbol_def_t *allocate_symbol_table( void *bufptr ) {
+
+    symbol_def_t *s_table_ptr = NULL;
+
+    if (NULL != bufptr) {
+        s_table_ptr = malloc(sizeof(symbol_def_t));
+        if (NULL != s_table_ptr) {
+            s_table_ptr->next = NULL;
+            s_table_ptr->bufptr = bufptr;
+
+            if (NULL == symbol_table_head) {
+                symbol_table_head = s_table_ptr;
+            }
+            else {
+                symbol_def_t *ptr = symbol_table_head;
+                while (ptr->next != NULL) {
+                    ptr = ptr->next;
+                }
+                ptr->next = s_table_ptr;
+            }
+        }
+    }
+    return s_table_ptr;
+}
+
+void deallocate_symbol_table(void) {
+
+    symbol_def_t *ptr = NULL;
+    symbol_def_t *prev_ptr = NULL;
+
+    if (NULL == symbol_table_head) {
+        return;
+    }
+    ptr = symbol_table_head->next;
+
+    // Look for the end of the list.
+    while (NULL != ptr->next) {
+
+        // If more than one table on list, keep track of the 2nd to the last ptr.
+        // Use this to NULL terminate the list after deleting the last ptr.
+        prev_ptr = ptr->next;
+        ptr = ptr->next;
+    }
+
+    // If only one table on the list, NULL the head.
+    if (ptr == symbol_table_head) {
+        symbol_table_head = NULL;
+    }
+
+    // Deallocate the last table pointer.
+    free(ptr->bufptr);
+    free(ptr);
+
+    // If there was more than one table on the list, prev_ptr will now point at the last
+    // table on the list.
+    if (NULL != prev_ptr) {
+
+        // NULL terminate the list.
+        prev_ptr->next = NULL;
+    }
+}
 
 void print_file_symbols_function(symbol_def_t *s_table) {
 
@@ -237,22 +304,26 @@ void read_data (FILE * stream)
 {
     size_t bufsize = BUFSIZE;
     int count = 0;
-    symbol_def_t s_table;
+    symbol_def_t *s_table_ptr;
     char *bufptr; // = &s_table.buffer[0];
     char *ds_ptr = NULL;
 
-    s_table.bufptr = malloc(BUFSIZE);
-    bufptr = s_table.bufptr;
-
-    count = getline(&s_table.bufptr, &bufsize, stream);
-    s_table.count = count;
+    bufptr = malloc(BUFSIZE);
+    count = getline(&bufptr, &bufsize, stream);
+    if (-1 == count) {
+        deallocate_symbol_table();
+        return;
+    }
+    s_table_ptr = allocate_symbol_table(bufptr);
+    s_table_ptr->bufptr = bufptr;
+    s_table_ptr->count = count;
 
     line_schema funcs_schema[] = {
-       {(void**)&s_table.name, "\t", parse_default},
-       {(void**)&s_table.filename, "\t", parse_default},
-       {(void**)&s_table.prototype, "\t", parse_proto_string},
-       {(void**)&s_table.sym_type, "\t", parse_symbol_type},
-       {(void**)&s_table.linenum, "\t", parse_line_number},
+       {(void**)&s_table_ptr->name, "\t", parse_default},
+       {(void**)&s_table_ptr->filename, "\t", parse_default},
+       {(void**)&s_table_ptr->prototype, "\t", parse_proto_string},
+       {(void**)&s_table_ptr->sym_type, "\t", parse_symbol_type},
+       {(void**)&s_table_ptr->linenum, "\t", parse_line_number},
        {NULL, NULL, NULL}
     };
 
@@ -268,12 +339,22 @@ void read_data (FILE * stream)
               *funcs_schema[i].symbol = (void*)funcs_schema[i].parse_function(bufptr); 
            } while (funcs_schema[++i].delimiter);
         }
-        print_file_symbols_function(&s_table);
-        count = getline(&s_table.bufptr, &bufsize, stream);
-        bufptr = s_table.bufptr;
-        s_table.count = count;
+        print_file_symbols_function(s_table_ptr);
+
+        bufptr = malloc(BUFSIZE);
+        count = getline(&bufptr, &bufsize, stream);
+        if (-1 != count) {
+            s_table_ptr = allocate_symbol_table(bufptr);
+            s_table_ptr->bufptr = bufptr;
+            s_table_ptr->count = count;
+        }
+
+//        count = getline(&s_table.bufptr, &bufsize, stream);
+//        bufptr = s_table.bufptr;
+//        s_table.count = count;
     }
-    free(s_table.bufptr);
+//    free(s_table.bufptr);
+    deallocate_symbol_table();    
 }
 
 
