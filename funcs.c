@@ -35,18 +35,32 @@ enum symboltype {
     enmm    // e
 };
 
+enum funcs_fields {
+    name        = 0,
+    filename    = 1,
+    prototype   = 2,
+    symboltype  = 3,
+    linenum     = 4,
+    last_plus_one = 5
+};
+
+#define BUFSIZE 120
 struct symbol_def {
+    char *bufptr;
+    uint8_t count;
     char *name;
     char *filename;
     char *prototype;
     enum symboltype sym_type;
     int linenum;
 };
+typedef struct symbol_def symbol_def_t;
 
-void print_file_symbols_function(struct symbol_def *s_table) {
+void print_file_symbols_function(symbol_def_t *s_table) {
 
     if (s_table->sym_type == func) {
         printf("%d\t%s\n", s_table->linenum, s_table->name);
+#if 0
         printf("%\t%s\n", s_table->prototype);
        switch (s_table->sym_type) {
            case macro:
@@ -82,18 +96,19 @@ void print_file_symbols_function(struct symbol_def *s_table) {
                break;
 
        };
+#endif
     }
 
 }
 
-void print_file_symbols_line(struct symbol_def *s_table) {
+void print_file_symbols_line(symbol_def_t *s_table) {
 
 
     printf("%d\t%s\n", s_table->linenum, s_table->name);
 
 }
 
-void print_file_symbols_table(struct symbol_def *s_table) {
+void print_file_symbols_table(symbol_def_t *s_table) {
 
     printf("name = %s\n", s_table->name);
     printf("file = %s\n", s_table->filename);
@@ -216,18 +231,21 @@ typedef struct line_schema_t {
 }line_schema;
 
 
-#define BUFSIZE 120
-char buf[BUFSIZE];
+//char buf[BUFSIZE];
 
 void read_data (FILE * stream)
 {
-    char *bufptr = &buf[0];
     size_t bufsize = BUFSIZE;
     int count = 0;
-    struct symbol_def s_table;
+    symbol_def_t s_table;
+    char *bufptr; // = &s_table.buffer[0];
     char *ds_ptr = NULL;
 
-    count = getline(&bufptr, &bufsize, stream);
+    s_table.bufptr = malloc(BUFSIZE);
+    bufptr = s_table.bufptr;
+
+    count = getline(&s_table.bufptr, &bufsize, stream);
+    s_table.count = count;
 
     line_schema funcs_schema[] = {
        {(void**)&s_table.name, "\t", parse_default},
@@ -240,8 +258,6 @@ void read_data (FILE * stream)
 
     while (count != -1) {
         int i=0;
-//        printf("-----------------------------------------------\n");
-//        printf("%d: %s\n", count, bufptr);
 
         if (funcs_schema[0].delimiter) {
            do {
@@ -252,88 +268,12 @@ void read_data (FILE * stream)
               *funcs_schema[i].symbol = (void*)funcs_schema[i].parse_function(bufptr); 
            } while (funcs_schema[++i].delimiter);
         }
-#if 0        
-        // first field: name.    
-        bufptr = strtok(bufptr, "\t"); 
-        s_table.name = bufptr;
-    //    printf("%s\n", bufptr);
-
-
-        // second field: file.    
-        bufptr = strtok(NULL, "\t"); 
-        s_table.filename = bufptr;
-    //    printf("%s\n", bufptr);
-
-
-        // third field: prototype.    
-        bufptr = strtok(NULL, "\t"); 
-    //    printf("%s\n", bufptr);
-#if 0
-        if ((NULL != (ds_ptr = strchr(bufptr, ';')))) {
-            *(ds_ptr + 1) = '\0';
-        }
-        if ((NULL != (ds_ptr = strchr(bufptr, '$')))) {
-            if (*(ds_ptr - 1) != ';') {
-                *ds_ptr++ = ';';
-            }
-            *ds_ptr = '\0';
-        }
-        if (bufptr[0] == '/') {
-            bufptr += 2;
-        }
-#endif
-        s_table.prototype = (char *)parse_proto_string(bufptr);
-
-        // fourth field: file.    
-        bufptr = strtok(NULL, "\t"); 
-        s_table.sym_type = parse_symbol_type(bufptr);
-#if 0
-        switch ((char)*bufptr) {
-            case 'd':
-                s_table.sym_type = macro;
-                break;
-
-            case 'v':
-                s_table.sym_type = var;
-                break;
-
-            case 'f':
-                s_table.sym_type = func;
-                break;
-
-            case 'p':
-                s_table.sym_type = proto;
-                break;
-
-            case 's':
-                s_table.sym_type = strct;
-                break;
-
-            case 'm':
-                s_table.sym_type = member;
-                break;
-
-            case 'g':
-                s_table.sym_type = enm;
-                break;
-
-            case 'e':
-                s_table.sym_type = enmm;
-                break;
-
-       };
-#endif
-
-
-        // fifth field: file.    
-        bufptr = strtok(NULL, "\t"); 
-//        s_table.linenum = strtol(strchr(bufptr, ':')+1, NULL, 10);
-        s_table.linenum = parse_line_number(bufptr);
-//        print_file_symbols_table(&s_table);
-#endif
         print_file_symbols_function(&s_table);
-        count = getline(&bufptr, &bufsize, stream);
+        count = getline(&s_table.bufptr, &bufsize, stream);
+        bufptr = s_table.bufptr;
+        s_table.count = count;
     }
+    free(s_table.bufptr);
 }
 
 
