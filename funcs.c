@@ -61,29 +61,26 @@ typedef struct symbol_def symbol_def_t;
 symbol_def_t *symbol_table_head = NULL;
 
 
-//symbol_def_t *allocate_symbol_table( void *bufptr ) {
 symbol_def_t *allocate_symbol_table() {
 
     symbol_def_t *s_table_ptr = NULL;
 
-//    if (NULL != bufptr) {
-        s_table_ptr = malloc(sizeof(symbol_def_t));
-        if (NULL != s_table_ptr) {
-            s_table_ptr->next = NULL;
-            s_table_ptr->bufptr = malloc(BUFSIZE);
+    s_table_ptr = malloc(sizeof(symbol_def_t));
+    if (NULL != s_table_ptr) {
+        s_table_ptr->next = NULL;
+        s_table_ptr->bufptr = malloc(BUFSIZE);
 
-            if (NULL == symbol_table_head) {
-                symbol_table_head = s_table_ptr;
-            }
-            else {
-                symbol_def_t *ptr = symbol_table_head;
-                while (ptr->next != NULL) {
-                    ptr = ptr->next;
-                }
-                ptr->next = s_table_ptr;
-            }
+        if (NULL == symbol_table_head) {
+            symbol_table_head = s_table_ptr;
         }
-//    }
+        else {
+            symbol_def_t *ptr = symbol_table_head;
+            while (ptr->next != NULL) {
+                ptr = ptr->next;
+            }
+            ptr->next = s_table_ptr;
+        }
+    }
     return s_table_ptr;
 }
 
@@ -303,7 +300,6 @@ typedef struct line_schema_t {
 }line_schema;
 
 
-//char buf[BUFSIZE];
 
 void read_data (FILE * stream)
 {
@@ -313,16 +309,12 @@ void read_data (FILE * stream)
     char *bufptr; // = &s_table.buffer[0];
     char *ds_ptr = NULL;
 
-//    bufptr = malloc(BUFSIZE);
     s_table_ptr = allocate_symbol_table(bufptr);
     count = getline(&s_table_ptr->bufptr, &bufsize, stream);
     if (-1 == count) {
         deallocate_symbol_table();    
-//        free(bufptr);
         return;
     }
-//    s_table_ptr = allocate_symbol_table(bufptr);
-//    s_table_ptr->bufptr = bufptr;
     s_table_ptr->count = count;
 
     line_schema funcs_schema[] = {
@@ -346,21 +338,17 @@ void read_data (FILE * stream)
                   bufptr = s_table_ptr->bufptr;
               }
               bufptr = strtok(bufptr, funcs_schema[i].delimiter); 
-//              printf("%p\n", bufptr);
               *funcs_schema[i].symbol = (void*)funcs_schema[i].parse_function(bufptr); 
            } while (funcs_schema[++i].delimiter);
         }
         print_file_symbols_function(s_table_ptr);
 
-//        bufptr = malloc(BUFSIZE);
         s_table_ptr = allocate_symbol_table(bufptr);
         if (NULL == s_table_ptr) {
             break;
         }
         count = getline(&s_table_ptr->bufptr, &bufsize, stream);
         if (-1 != count) {
-//            s_table_ptr = allocate_symbol_table(bufptr);
-//            s_table_ptr->bufptr = bufptr;
             s_table_ptr->count = count;
 
             funcs_schema[name].symbol       = (void**)&s_table_ptr->name;
@@ -372,14 +360,9 @@ void read_data (FILE * stream)
         }
         else {
             deallocate_symbol_table();    
-//            free(bufptr);
         }
 
-//        count = getline(&s_table.bufptr, &bufsize, stream);
-//        bufptr = s_table.bufptr;
-//        s_table.count = count;
     }
-//    free(s_table.bufptr);
     deallocate_symbol_table();    
 }
 
