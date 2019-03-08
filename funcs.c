@@ -35,31 +35,112 @@ enum symboltype {
     enmm    // e
 };
 
+//char *parse_proto_string( char *bufptr )
+void * parse_proto_string( char *bufptr )
+{
+    char *ds_ptr = NULL;
+
+    if ((NULL != (ds_ptr = strchr(bufptr, ';')))) {
+        *(ds_ptr + 1) = '\0';
+    }
+    if ((NULL != (ds_ptr = strchr(bufptr, '$')))) {
+        if (*(ds_ptr - 1) != ';') {
+            *ds_ptr++ = ';';
+        }
+        *ds_ptr = '\0';
+    }
+    if (bufptr[0] == '/') {
+        bufptr += 2;
+    }
+
+    return (void *)bufptr;
+}
+
+ void * parse_symbol_type( char *bufptr )
+{
+   uint32_t rval = 0;
+
+    switch ((char)*bufptr) {
+        case 'd':
+            rval = macro;
+            break;
+
+        case 'v':
+            rval = var;
+            break;
+
+        case 'f':
+            rval = func;
+            break;
+
+        case 'p':
+            rval = proto;
+            break;
+
+        case 's':
+            rval = strct;
+            break;
+
+        case 'm':
+            rval = member;
+            break;
+
+        case 'g':
+            rval = enm;
+            break;
+
+        case 'e':
+            rval = enmm;
+            break;
+
+   };
+
+   return (void *)rval; 
+}
+
+void *parse_line_number( char *bufptr )
+{
+   return (void *)strtol(strchr(bufptr, ':')+1, NULL, 10);
+}
+
+void * parse_default( char *bufptr )
+{
+   return (void *)bufptr;
+}
+
 enum funcs_fields {
     name        = 0,
     filename    = 1,
     prototype   = 2,
     symboltype  = 3,
     linenum     = 4,
-    last_plus_one = 5
+    null_term   = 5,
+    last_plus_one = 6
 };
 
+
+typedef struct line_schema {
+   void **symbol;
+   char *delimiter;
+   void *(*parse_function)(char *bufptr);
+}line_schema_t;
+
 #define BUFSIZE 120
-struct symbol_def {
+typedef struct symbol_def {
     struct symbol_def *next;
     char *bufptr;
     uint8_t count;
+    line_schema_t line_schema[last_plus_one];
     char *name;
     char *filename;
     char *prototype;
     enum symboltype sym_type;
     int linenum;
-};
+}symbol_def_t;
 
-typedef struct symbol_def symbol_def_t;
+//typedef struct symbol_def symbol_def_t;
 
 symbol_def_t *symbol_table_head = NULL;
-
 
 symbol_def_t *allocate_symbol_table() {
 
@@ -83,6 +164,35 @@ symbol_def_t *allocate_symbol_table() {
     }
     return s_table_ptr;
 }
+
+symbol_def_t *allocate_funcs_symbol_table() {
+
+   symbol_def_t *s_table_ptr;
+
+   s_table_ptr = allocate_symbol_table();
+   s_table_ptr->line_schema[name]      = (line_schema_t) {.symbol = (void**)&s_table_ptr->name,
+                                                          .delimiter = "\t",
+                                                          .parse_function = parse_default};
+   s_table_ptr->line_schema[filename]  = (line_schema_t) {.symbol = (void**)&s_table_ptr->filename,
+                                                          .delimiter = "\t",
+                                                          .parse_function = parse_default};
+   s_table_ptr->line_schema[prototype] = (line_schema_t) {.symbol = (void**)&s_table_ptr->prototype,
+                                                          .delimiter = "\t",
+                                                          .parse_function = parse_proto_string};
+   s_table_ptr->line_schema[symboltype]  = (line_schema_t) {.symbol = (void**)&s_table_ptr->sym_type,
+                                                          .delimiter = "\t",
+                                                          .parse_function = parse_symbol_type};
+   s_table_ptr->line_schema[linenum]   = (line_schema_t) {.symbol = (void**)&s_table_ptr->linenum,
+                                                          .delimiter = "\t",
+                                                          .parse_function = parse_line_number};
+   s_table_ptr->line_schema[null_term] = (line_schema_t) {.symbol = NULL,
+                                                          .delimiter = NULL,
+                                                          .parse_function = NULL};
+   return s_table_ptr;
+
+}
+
+typedef symbol_def_t *(*symbol_table_alloc_func_t)(void);
 
 void deallocate_symbol_table(void) {
 
@@ -220,96 +330,14 @@ void print_file_symbols_table(symbol_def_t *s_table) {
 
 }
 
-//char *parse_proto_string( char *bufptr )
-void * parse_proto_string( char *bufptr )
-{
-    char *ds_ptr = NULL;
 
-    if ((NULL != (ds_ptr = strchr(bufptr, ';')))) {
-        *(ds_ptr + 1) = '\0';
-    }
-    if ((NULL != (ds_ptr = strchr(bufptr, '$')))) {
-        if (*(ds_ptr - 1) != ';') {
-            *ds_ptr++ = ';';
-        }
-        *ds_ptr = '\0';
-    }
-    if (bufptr[0] == '/') {
-        bufptr += 2;
-    }
-
-    return (void *)bufptr;
-}
-
- void * parse_symbol_type( char *bufptr )
-{
-   uint64_t rval = 0;
-
-    switch ((char)*bufptr) {
-        case 'd':
-            rval = macro;
-            break;
-
-        case 'v':
-            rval = var;
-            break;
-
-        case 'f':
-            rval = func;
-            break;
-
-        case 'p':
-            rval = proto;
-            break;
-
-        case 's':
-            rval = strct;
-            break;
-
-        case 'm':
-            rval = member;
-            break;
-
-        case 'g':
-            rval = enm;
-            break;
-
-        case 'e':
-            rval = enmm;
-            break;
-
-   };
-
-   return (void *)rval; 
-}
-
-void *parse_line_number( char *bufptr )
-{
-   return (void *)strtol(strchr(bufptr, ':')+1, NULL, 10);
-}
-
-void * parse_default( char *bufptr )
-{
-   return (void *)bufptr;
-}
-
-typedef struct line_schema_t {
-   void **symbol;
-   char *delimiter;
-   void *(*parse_function)(char *bufptr);
-}line_schema;
-
-
-
-void read_data (FILE * stream)
+void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream)
 {
     size_t bufsize = BUFSIZE;
     int count = 0;
     symbol_def_t *s_table_ptr;
-    char *bufptr; // = &s_table.buffer[0];
-    char *ds_ptr = NULL;
 
-    s_table_ptr = allocate_symbol_table(bufptr);
+    s_table_ptr = s_table_alloc();
     count = getline(&s_table_ptr->bufptr, &bufsize, stream);
     if (-1 == count) {
         deallocate_symbol_table();    
@@ -317,51 +345,28 @@ void read_data (FILE * stream)
     }
     s_table_ptr->count = count;
 
-    line_schema funcs_schema[] = {
-       {(void**)&s_table_ptr->name, "\t", parse_default},
-       {(void**)&s_table_ptr->filename, "\t", parse_default},
-       {(void**)&s_table_ptr->prototype, "\t", parse_proto_string},
-       {(void**)&s_table_ptr->sym_type, "\t", parse_symbol_type},
-       {(void**)&s_table_ptr->linenum, "\t", parse_line_number},
-       {NULL, NULL, NULL}
-    };
-
     while (count != -1) {
         int i=0;
+        char *bufptr;
 
-        if (funcs_schema[0].delimiter) {
+        bufptr = s_table_ptr->bufptr;
+        if (s_table_ptr->line_schema[0].delimiter) {
            do {
-              if (i != 0) {
-                  bufptr = NULL;
-              }
-              else {
-                  bufptr = s_table_ptr->bufptr;
-              }
-              bufptr = strtok(bufptr, funcs_schema[i].delimiter); 
-              *funcs_schema[i].symbol = (void*)funcs_schema[i].parse_function(bufptr); 
-           } while (funcs_schema[++i].delimiter);
+
+              bufptr = strtok(bufptr, s_table_ptr->line_schema[i].delimiter); 
+              *s_table_ptr->line_schema[i].symbol = (void*)s_table_ptr->line_schema[i].parse_function(bufptr); 
+              bufptr = NULL;
+           } while (s_table_ptr->line_schema[++i].delimiter);
         }
         print_file_symbols_function(s_table_ptr);
 
-        s_table_ptr = allocate_symbol_table(bufptr);
+        s_table_ptr = s_table_alloc();
         if (NULL == s_table_ptr) {
             break;
         }
         count = getline(&s_table_ptr->bufptr, &bufsize, stream);
-        if (-1 != count) {
-            s_table_ptr->count = count;
-
-            funcs_schema[name].symbol       = (void**)&s_table_ptr->name;
-            funcs_schema[filename].symbol   = (void**)&s_table_ptr->filename;
-            funcs_schema[prototype].symbol  = (void**)&s_table_ptr->prototype;
-            funcs_schema[symboltype].symbol = (void**)&s_table_ptr->sym_type;
-            funcs_schema[linenum].symbol    = (void**)&s_table_ptr->linenum;
-
-        }
-        else {
-            deallocate_symbol_table();    
-        }
-
+        bufptr = s_table_ptr->bufptr;
+        s_table_ptr->count = count;
     }
     deallocate_symbol_table();    
 }
@@ -389,7 +394,7 @@ main (int argc, char **argv)
   }
 //  write_data (output);
 
-  read_data (output);
+  read_data (allocate_funcs_symbol_table, output);
   if (pclose (output) != 0) {
       fprintf (stderr, "Could not run more or other error.\n");
   }
