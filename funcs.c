@@ -61,15 +61,16 @@ typedef struct symbol_def symbol_def_t;
 symbol_def_t *symbol_table_head = NULL;
 
 
-symbol_def_t *allocate_symbol_table( void *bufptr ) {
+//symbol_def_t *allocate_symbol_table( void *bufptr ) {
+symbol_def_t *allocate_symbol_table() {
 
     symbol_def_t *s_table_ptr = NULL;
 
-    if (NULL != bufptr) {
+//    if (NULL != bufptr) {
         s_table_ptr = malloc(sizeof(symbol_def_t));
         if (NULL != s_table_ptr) {
             s_table_ptr->next = NULL;
-            s_table_ptr->bufptr = bufptr;
+            s_table_ptr->bufptr = malloc(BUFSIZE);
 
             if (NULL == symbol_table_head) {
                 symbol_table_head = s_table_ptr;
@@ -82,7 +83,7 @@ symbol_def_t *allocate_symbol_table( void *bufptr ) {
                 ptr->next = s_table_ptr;
             }
         }
-    }
+//    }
     return s_table_ptr;
 }
 
@@ -127,6 +128,10 @@ void print_file_symbols_function(symbol_def_t *s_table) {
 
     if (s_table->sym_type == func) {
         printf("%d\t%s\n", s_table->linenum, s_table->name);
+//        printf("%s\n", __FUNCTION__);
+//        printf("%s\n", s_table->bufptr);
+//        printf("%d\n", s_table->linenum);
+//        printf("%s\n", s_table->name);
 #if 0
         printf("%\t%s\n", s_table->prototype);
        switch (s_table->sym_type) {
@@ -219,7 +224,7 @@ void print_file_symbols_table(symbol_def_t *s_table) {
 }
 
 //char *parse_proto_string( char *bufptr )
-uint32_t parse_proto_string( char *bufptr )
+void * parse_proto_string( char *bufptr )
 {
     char *ds_ptr = NULL;
 
@@ -236,12 +241,12 @@ uint32_t parse_proto_string( char *bufptr )
         bufptr += 2;
     }
 
-    return (uint32_t)bufptr;
+    return (void *)bufptr;
 }
 
-uint32_t parse_symbol_type( char *bufptr )
+ void * parse_symbol_type( char *bufptr )
 {
-   uint32_t rval = 0;
+   uint64_t rval = 0;
 
     switch ((char)*bufptr) {
         case 'd':
@@ -278,23 +283,23 @@ uint32_t parse_symbol_type( char *bufptr )
 
    };
 
-   return rval; 
+   return (void *)rval; 
 }
 
-uint32_t parse_line_number( char *bufptr )
+void *parse_line_number( char *bufptr )
 {
-   return strtol(strchr(bufptr, ':')+1, NULL, 10);
+   return (void *)strtol(strchr(bufptr, ':')+1, NULL, 10);
 }
 
-uint32_t parse_default( char *bufptr )
+void * parse_default( char *bufptr )
 {
-   return (uint32_t)bufptr;
+   return (void *)bufptr;
 }
 
 typedef struct line_schema_t {
    void **symbol;
    char *delimiter;
-   uint32_t(*parse_function)(char *bufptr);
+   void *(*parse_function)(char *bufptr);
 }line_schema;
 
 
@@ -308,14 +313,16 @@ void read_data (FILE * stream)
     char *bufptr; // = &s_table.buffer[0];
     char *ds_ptr = NULL;
 
-    bufptr = malloc(BUFSIZE);
-    count = getline(&bufptr, &bufsize, stream);
+//    bufptr = malloc(BUFSIZE);
+    s_table_ptr = allocate_symbol_table(bufptr);
+    count = getline(&s_table_ptr->bufptr, &bufsize, stream);
     if (-1 == count) {
-        deallocate_symbol_table();
+        deallocate_symbol_table();    
+//        free(bufptr);
         return;
     }
-    s_table_ptr = allocate_symbol_table(bufptr);
-    s_table_ptr->bufptr = bufptr;
+//    s_table_ptr = allocate_symbol_table(bufptr);
+//    s_table_ptr->bufptr = bufptr;
     s_table_ptr->count = count;
 
     line_schema funcs_schema[] = {
@@ -335,18 +342,37 @@ void read_data (FILE * stream)
               if (i != 0) {
                   bufptr = NULL;
               }
+              else {
+                  bufptr = s_table_ptr->bufptr;
+              }
               bufptr = strtok(bufptr, funcs_schema[i].delimiter); 
+//              printf("%p\n", bufptr);
               *funcs_schema[i].symbol = (void*)funcs_schema[i].parse_function(bufptr); 
            } while (funcs_schema[++i].delimiter);
         }
         print_file_symbols_function(s_table_ptr);
 
-        bufptr = malloc(BUFSIZE);
-        count = getline(&bufptr, &bufsize, stream);
+//        bufptr = malloc(BUFSIZE);
+        s_table_ptr = allocate_symbol_table(bufptr);
+        if (NULL == s_table_ptr) {
+            break;
+        }
+        count = getline(&s_table_ptr->bufptr, &bufsize, stream);
         if (-1 != count) {
-            s_table_ptr = allocate_symbol_table(bufptr);
-            s_table_ptr->bufptr = bufptr;
+//            s_table_ptr = allocate_symbol_table(bufptr);
+//            s_table_ptr->bufptr = bufptr;
             s_table_ptr->count = count;
+
+            funcs_schema[name].symbol       = (void**)&s_table_ptr->name;
+            funcs_schema[filename].symbol   = (void**)&s_table_ptr->filename;
+            funcs_schema[prototype].symbol  = (void**)&s_table_ptr->prototype;
+            funcs_schema[symboltype].symbol = (void**)&s_table_ptr->sym_type;
+            funcs_schema[linenum].symbol    = (void**)&s_table_ptr->linenum;
+
+        }
+        else {
+            deallocate_symbol_table();    
+//            free(bufptr);
         }
 
 //        count = getline(&s_table.bufptr, &bufsize, stream);
