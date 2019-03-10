@@ -142,7 +142,10 @@ typedef struct line_schema {
 
 typedef void (*print_file_symbols_function)(symbol_def_t *s_table);
 
-#define BUFSIZE 120
+typedef symbol_def_t *(*symbol_table_alloc_func_t)(void);
+typedef void(*symbol_table_dealloc_func_t)(void);
+
+#define BUFSIZE 128
 struct symbol_def {
 //typedef struct symbol_def {
     struct symbol_def *next;
@@ -155,26 +158,29 @@ struct symbol_def {
     enum symboltype sym_type;
     int linenum;
     print_file_symbols_function print_function;
+    symbol_table_dealloc_func_t dealloc_function;
 //}symbol_def_t;
 };
 
 
 void print_vars_file_symbols_line(symbol_def_t *s_table)
 {
-    printf("%d\t%s\n", s_table->linenum, s_table->filename);
+    printf("%d\t%s\t%s\n", s_table->linenum, s_table->filename, s_table->prototype);
 
 }
 
 void print_funcs_file_symbols_line(symbol_def_t *s_table)
 {
     if (s_table->sym_type == func) {
-        printf("%d\t%s\n", s_table->linenum, s_table->name);
+//        printf("%d\t%s\n", s_table->linenum, s_table->name);
+        printf("%d\t%s\t%s\n", s_table->linenum, s_table->name, s_table->prototype);
     }
 }
 
-symbol_def_t *symbol_table_head = NULL;
+symbol_def_t *funcs_symbol_table_head = NULL;
+symbol_def_t *vars_symbol_table_head = NULL;
 
-symbol_def_t *allocate_symbol_table() {
+symbol_def_t *allocate_symbol_table( symbol_def_t **symbol_table_head ) {
 
     symbol_def_t *s_table_ptr = NULL;
 
@@ -183,11 +189,11 @@ symbol_def_t *allocate_symbol_table() {
         s_table_ptr->next = NULL;
         s_table_ptr->bufptr = malloc(BUFSIZE);
 
-        if (NULL == symbol_table_head) {
-            symbol_table_head = s_table_ptr;
+        if (NULL == *symbol_table_head) {
+            *symbol_table_head = s_table_ptr;
         }
         else {
-            symbol_def_t *ptr = symbol_table_head;
+            symbol_def_t *ptr = *symbol_table_head;
             while (ptr->next != NULL) {
                 ptr = ptr->next;
             }
@@ -197,11 +203,41 @@ symbol_def_t *allocate_symbol_table() {
     return s_table_ptr;
 }
 
+void deallocate_symbol_table( symbol_def_t **symbol_table_head )
+{
+
+    symbol_def_t *ptr = NULL;
+    symbol_def_t *prev_ptr = NULL;
+
+    ptr = *symbol_table_head;
+
+    while (NULL != ptr) {
+
+        prev_ptr = ptr;
+        ptr = ptr->next;
+
+        // Deallocate the last table pointer.
+        free(prev_ptr->bufptr);
+        free(prev_ptr);
+    }
+}
+
+void deallocate_funcs_symbol_table(void)
+{
+    deallocate_symbol_table(&funcs_symbol_table_head);
+}
+
+void deallocate_vars_symbol_table(void)
+{
+    deallocate_symbol_table(&vars_symbol_table_head);
+}
+
 symbol_def_t *allocate_funcs_symbol_table() {
 
    symbol_def_t *s_table_ptr;
 
-   s_table_ptr = allocate_symbol_table();
+   s_table_ptr = allocate_symbol_table(&funcs_symbol_table_head);
+
    s_table_ptr->line_schema[name_f_idx]      = (line_schema_t) {.symbol = (void**)&s_table_ptr->name,
                                                           .delimiter = "\t",
                                                           .parse_function = parse_default};
@@ -221,6 +257,7 @@ symbol_def_t *allocate_funcs_symbol_table() {
                                                           .delimiter = NULL,
                                                           .parse_function = NULL};
    s_table_ptr->print_function = print_funcs_file_symbols_line;
+   s_table_ptr->dealloc_function = deallocate_funcs_symbol_table;
    return s_table_ptr;
 
 }
@@ -229,7 +266,8 @@ symbol_def_t *allocate_vars_symbol_table() {
 
    symbol_def_t *s_table_ptr;
 
-   s_table_ptr = allocate_symbol_table();
+   s_table_ptr = allocate_symbol_table(&vars_symbol_table_head);
+
    s_table_ptr->line_schema[filename_v_idx]      = (line_schema_t) {.symbol = (void**)&s_table_ptr->filename,
                                                           .delimiter =  ":",
                                                           .parse_function = parse_default};
@@ -243,47 +281,9 @@ symbol_def_t *allocate_vars_symbol_table() {
                                                           .delimiter = NULL,
                                                           .parse_function = NULL};
    s_table_ptr->print_function = print_vars_file_symbols_line;
+   s_table_ptr->dealloc_function = deallocate_vars_symbol_table;
    return s_table_ptr;
 
-}
-
-typedef symbol_def_t *(*symbol_table_alloc_func_t)(void);
-
-void deallocate_symbol_table(void) {
-
-    symbol_def_t *ptr = NULL;
-    symbol_def_t *prev_ptr = NULL;
-
-    if (NULL == symbol_table_head) {
-        return;
-    }
-    ptr = symbol_table_head->next;
-
-    // Look for the end of the list.
-    while (NULL != ptr->next) {
-
-        // If more than one table on list, keep track of the 2nd to the last ptr.
-        // Use this to NULL terminate the list after deleting the last ptr.
-        prev_ptr = ptr->next;
-        ptr = ptr->next;
-    }
-
-    // If only one table on the list, NULL the head.
-    if (ptr == symbol_table_head) {
-        symbol_table_head = NULL;
-    }
-
-    // Deallocate the last table pointer.
-    free(ptr->bufptr);
-    free(ptr);
-
-    // If there was more than one table on the list, prev_ptr will now point at the last
-    // table on the list.
-    if (NULL != prev_ptr) {
-
-        // NULL terminate the list.
-        prev_ptr->next = NULL;
-    }
 }
 
 void print_funcs_file_symbols_function(symbol_def_t *s_table) {
@@ -395,7 +395,7 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream)
     s_table_ptr = s_table_alloc();
     count = getline(&s_table_ptr->bufptr, &bufsize, stream);
     if (-1 == count) {
-        deallocate_symbol_table();    
+        s_table_ptr->dealloc_function();    
         return;
     }
     s_table_ptr->count = count;
@@ -423,7 +423,7 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream)
         bufptr = s_table_ptr->bufptr;
         s_table_ptr->count = count;
     }
-    deallocate_symbol_table();    
+    s_table_ptr->dealloc_function();    
 }
 
 
