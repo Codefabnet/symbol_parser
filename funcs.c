@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
 
 void
@@ -187,7 +188,7 @@ symbol_def_t *allocate_symbol_table( symbol_def_t **symbol_table_head ) {
     s_table_ptr = malloc(sizeof(symbol_def_t));
     if (NULL != s_table_ptr) {
         s_table_ptr->next = NULL;
-        s_table_ptr->bufptr = malloc(BUFSIZE);
+//        s_table_ptr->bufptr = malloc(BUFSIZE);
 
         if (NULL == *symbol_table_head) {
             *symbol_table_head = s_table_ptr;
@@ -217,9 +218,12 @@ void deallocate_symbol_table( symbol_def_t **symbol_table_head )
         ptr = ptr->next;
 
         // Deallocate the last table pointer.
-        free(prev_ptr->bufptr);
+        if (NULL != prev_ptr->bufptr) {
+           free(prev_ptr->bufptr);
+        }
         free(prev_ptr);
     }
+    *symbol_table_head = NULL;
 }
 
 void deallocate_funcs_symbol_table(void)
@@ -391,13 +395,22 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream)
     size_t bufsize = BUFSIZE;
     int count = 0;
     symbol_def_t *s_table_ptr;
+    char *bufptr = NULL;
 
-    s_table_ptr = s_table_alloc();
-    count = getline(&s_table_ptr->bufptr, &bufsize, stream);
+//    s_table_ptr = s_table_alloc(i);
+    bufptr = malloc(BUFSIZE);
+//    count = getline(&s_table_ptr->bufptr, &bufsize, stream);
+    count = getline(&bufptr, &bufsize, stream);
     if (-1 == count) {
-        s_table_ptr->dealloc_function();    
+//        s_table_ptr->dealloc_function();    
+       free (bufptr);         
+       return;
+    }
+    s_table_ptr = s_table_alloc();
+    if (NULL == s_table_ptr) {
         return;
     }
+    s_table_ptr->bufptr = bufptr;
     s_table_ptr->count = count;
 
     while (count != -1) {
@@ -415,15 +428,27 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream)
         }
         s_table_ptr->print_function(s_table_ptr);
 
+//        s_table_ptr = s_table_alloc();
+//        if (NULL == s_table_ptr) {
+//            break;
+//        }
+//        count = getline(&s_table_ptr->bufptr, &bufsize, stream);
+        bufptr = malloc(BUFSIZE);
+        count = getline(&bufptr, &bufsize, stream);
+        if (-1 == count) {
+//        s_table_ptr->dealloc_function();    
+           free (bufptr);         
+           break;
+        }
         s_table_ptr = s_table_alloc();
         if (NULL == s_table_ptr) {
             break;
         }
-        count = getline(&s_table_ptr->bufptr, &bufsize, stream);
-        bufptr = s_table_ptr->bufptr;
+        s_table_ptr->bufptr = bufptr;
+//        bufptr = s_table_ptr->bufptr;
         s_table_ptr->count = count;
     }
-    s_table_ptr->dealloc_function();    
+//    s_table_ptr->dealloc_function();    
 }
 
 
@@ -432,9 +457,14 @@ main (int argc, char **argv)
 {
   FILE *output;
   char command[120];
-  char *filetoparse;
-  char *vartofind;
+  char *filetoparse = NULL;
+  char *vartofind = NULL;
+  bool find_variables = false;
   symbol_table_alloc_func_t alloc_func;
+  symbol_table_dealloc_func_t dealloc_func;
+  symbol_def_t *vars_ptr;
+  symbol_def_t *funcs_ptr;
+  char *symbol_filename = NULL;
 
   if (strstr(argv[0], "vars") != NULL) {
       if (2 >= argc) {
@@ -443,8 +473,10 @@ main (int argc, char **argv)
       else {
           vartofind = "read_data";
       }
+      find_variables = true;
 
       alloc_func = allocate_vars_symbol_table;
+      dealloc_func = deallocate_vars_symbol_table;
 
       //  -u to turn off sort, 
       snprintf(command, sizeof(command), "grep --include=*.c -IRn %s *", vartofind);
@@ -458,6 +490,7 @@ main (int argc, char **argv)
       }
 
       alloc_func = allocate_funcs_symbol_table;
+      dealloc_func = deallocate_funcs_symbol_table;
 
       snprintf(command, sizeof(command), "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk", filetoparse);
   }
@@ -470,9 +503,68 @@ main (int argc, char **argv)
 //  write_data (output);
 
   read_data (alloc_func, output);
+
   if (pclose (output) != 0) {
       fprintf (stderr, "Could not run more or other error.\n");
   }
+
+  if (false == find_variables) {
+      dealloc_func();
+      return EXIT_SUCCESS;
+  }
+
+
+  vars_ptr = vars_symbol_table_head;
+  while (NULL != vars_ptr && vars_ptr->filename != NULL) {
+     if (symbol_filename == NULL ||
+        strcmp(symbol_filename, vars_ptr->filename) != 0) {
+        symbol_filename = vars_ptr->filename;    
+
+        alloc_func = allocate_funcs_symbol_table;
+        dealloc_func = deallocate_funcs_symbol_table;
+
+        deallocate_funcs_symbol_table();
+
+        snprintf(command, sizeof(command), "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk", symbol_filename);
+
+        output = popen (command, "r");
+        if (!output) {
+            fprintf (stderr, "incorrect parameters or too many files.\n");
+            return EXIT_FAILURE;
+        }
+
+        read_data (alloc_func, output);
+        pclose (output);
+
+        funcs_ptr = funcs_symbol_table_head;
+     }
+
+     while (NULL != funcs_ptr) {
+        
+//        if (vars_ptr->linenum > funcs_ptr->linenum) {
+//           funcs_ptr = funcs_ptr->next;
+//           continue; 
+//        }
+
+        if (vars_ptr->linenum == funcs_ptr->linenum ||
+            (funcs_ptr->linenum < vars_ptr->linenum &&
+            (NULL == funcs_ptr->next ||
+            funcs_ptr->next->linenum > vars_ptr->linenum))) {
+
+
+            funcs_ptr->print_function(funcs_ptr);
+            vars_ptr->print_function(vars_ptr);
+            funcs_ptr = funcs_symbol_table_head;
+            break;
+        }
+        funcs_ptr = funcs_ptr->next;
+     }
+
+
+    vars_ptr = vars_ptr->next;
+  }      
+
+
   return EXIT_SUCCESS;
 }
 
