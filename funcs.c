@@ -166,7 +166,8 @@ struct symbol_def {
 
 void print_vars_file_symbols_line(symbol_def_t *s_table)
 {
-    printf("%d\t%s\t%s\n", s_table->linenum, s_table->filename, s_table->prototype);
+//    printf("%d\t%s\t%s\n", s_table->linenum, s_table->filename, s_table->prototype);
+    printf("%d\t%s\n", s_table->linenum, s_table->prototype);
 
 }
 
@@ -174,7 +175,7 @@ void print_funcs_file_symbols_line(symbol_def_t *s_table)
 {
     if (s_table->sym_type == func) {
 //        printf("%d\t%s\n", s_table->linenum, s_table->name);
-        printf("%d\t%s\t%s\n", s_table->linenum, s_table->name, s_table->prototype);
+        printf("%s, in file: %s\n", s_table->prototype, s_table->filename);
     }
 }
 
@@ -188,7 +189,6 @@ symbol_def_t *allocate_symbol_table( symbol_def_t **symbol_table_head ) {
     s_table_ptr = malloc(sizeof(symbol_def_t));
     if (NULL != s_table_ptr) {
         s_table_ptr->next = NULL;
-//        s_table_ptr->bufptr = malloc(BUFSIZE);
 
         if (NULL == *symbol_table_head) {
             *symbol_table_head = s_table_ptr;
@@ -397,12 +397,9 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream)
     symbol_def_t *s_table_ptr;
     char *bufptr = NULL;
 
-//    s_table_ptr = s_table_alloc(i);
     bufptr = malloc(BUFSIZE);
-//    count = getline(&s_table_ptr->bufptr, &bufsize, stream);
     count = getline(&bufptr, &bufsize, stream);
     if (-1 == count) {
-//        s_table_ptr->dealloc_function();    
        free (bufptr);         
        return;
     }
@@ -426,17 +423,11 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream)
               bufptr = NULL;
            } while (s_table_ptr->line_schema[++i].delimiter);
         }
-        s_table_ptr->print_function(s_table_ptr);
+//        s_table_ptr->print_function(s_table_ptr);
 
-//        s_table_ptr = s_table_alloc();
-//        if (NULL == s_table_ptr) {
-//            break;
-//        }
-//        count = getline(&s_table_ptr->bufptr, &bufsize, stream);
         bufptr = malloc(BUFSIZE);
         count = getline(&bufptr, &bufsize, stream);
         if (-1 == count) {
-//        s_table_ptr->dealloc_function();    
            free (bufptr);         
            break;
         }
@@ -445,7 +436,6 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream)
             break;
         }
         s_table_ptr->bufptr = bufptr;
-//        bufptr = s_table_ptr->bufptr;
         s_table_ptr->count = count;
     }
 //    s_table_ptr->dealloc_function();    
@@ -541,16 +531,22 @@ main (int argc, char **argv)
 
      while (NULL != funcs_ptr) {
         
-//        if (vars_ptr->linenum > funcs_ptr->linenum) {
-//           funcs_ptr = funcs_ptr->next;
-//           continue; 
-//        }
-
         if (vars_ptr->linenum == funcs_ptr->linenum ||
             (funcs_ptr->linenum < vars_ptr->linenum &&
             (NULL == funcs_ptr->next ||
             funcs_ptr->next->linenum > vars_ptr->linenum))) {
 
+            if (func == vars_ptr->sym_type) {
+               if (vars_ptr->linenum == funcs_ptr->linenum) {
+                  printf("\nDefined here:\n"); 
+               }
+               else {
+                  printf("\nCalled by:\n"); 
+               }
+            }
+            else {
+               printf("\nReferenced here:\n"); 
+            }
 
             funcs_ptr->print_function(funcs_ptr);
             vars_ptr->print_function(vars_ptr);
