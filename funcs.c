@@ -297,62 +297,6 @@ symbol_def_t *allocate_vars_symbol_table() {
 
 }
 
-void print_funcs_file_symbols_function(symbol_def_t *s_table) {
-
-    if (s_table->sym_type == func) {
-        printf("%d\t%s\n", s_table->linenum, s_table->name);
-//        printf("%s\n", __FUNCTION__);
-//        printf("%s\n", s_table->bufptr);
-//        printf("%d\n", s_table->linenum);
-//        printf("%s\n", s_table->name);
-#if 0
-        printf("%\t%s\n", s_table->prototype);
-       switch (s_table->sym_type) {
-           case macro:
-               printf("symbol type = macro\n");
-               break;
-
-           case var:
-               printf("symbol type = var\n");
-               break;
-
-           case func:
-               printf("symbol type = func\n");
-               break;
-
-           case proto:
-               printf("symbol type = proto\n");
-               break;
-
-           case strct:
-               printf("symbol type = struct\n");
-               break;
-
-           case member:
-               printf("symbol type = struct member\n");
-               break;
-
-           case enm:
-               printf("symbol type = enum\n");
-               break;
-
-           case enmm:
-               printf("symbol type = enum member\n");
-               break;
-
-       };
-#endif
-    }
-
-}
-#if 0
-void print_funcs_file_symbols_line(symbol_def_t *s_table) {
-
-
-    printf("%d\t%s\n", s_table->linenum, s_table->name);
-
-}
-#endif
 void print_funcs_file_symbols_table(symbol_def_t *s_table) {
 
     printf("name = %s\n", s_table->name);
@@ -422,7 +366,7 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream)
     }
     s_table_ptr->bufptr = bufptr;
     s_table_ptr->count = count;
-//printf("%s\n", bufptr);
+
     while (count != -1) {
         int i=0;
         char *bufptr;
@@ -440,7 +384,7 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream)
 
         bufptr = malloc(BUFSIZE);
         count = getline(&bufptr, &bufsize, stream);
-//printf("%s\n", bufptr);
+
         if (-1 == count) {
            free (bufptr);         
            break;
@@ -485,7 +429,6 @@ main (int argc, char **argv)
 
       //  -u to turn off sort, 
       snprintf(command, sizeof(command), "grep --include=*.c -IRn %s *", vartofind);
-//printf("command: %s\n", command);
   }
   else {
       if (2 >= argc) {
@@ -507,7 +450,7 @@ main (int argc, char **argv)
       return EXIT_FAILURE;
   }
 //  write_data (output);
-//printf("first call to read_data: %s\n", argv[0]);
+
   read_data (alloc_func, output);
 
   if (pclose (output) != 0) {
@@ -533,38 +476,30 @@ main (int argc, char **argv)
         deallocate_funcs_symbol_table();
 
         snprintf(command, sizeof(command), "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk", symbol_filename);
-//printf("command: %s\n", command);
-printf("\n");
+
+        printf("\n");
         output = popen (command, "r");
         if (!output) {
             fprintf (stderr, "incorrect parameters or too many files.\n");
             return EXIT_FAILURE;
         }
-//printf("call to read_data, funcs: %s\n", symbol_filename);
+
         read_data (alloc_func, output);
         pclose (output);
-#if 0
-        funcs_ptr = funcs_symbol_table_head;
-        while (NULL != funcs_ptr) {
 
-
-            funcs_ptr->print_function(funcs_ptr);
-            funcs_ptr = funcs_ptr->next;
-        }
-#endif
         funcs_ptr = funcs_symbol_table_head;
      }
      if (NULL != vars_ptr->prototype) {
         char *print_pos = strstr(vars_ptr->prototype, "print"); 
-//       printf("%s\n", vars_ptr->prototype);
+
         if ((NULL != print_pos) && (print_pos < strstr(vars_ptr->prototype, vartofind))) {
-//            printf("******** %s\n", vars_ptr->prototype);
+
             vars_ptr = vars_ptr->next;
             continue;
         }
         print_pos = strstr(vars_ptr->prototype, "//"); 
         if ((NULL != print_pos) && (print_pos < strstr(vars_ptr->prototype, vartofind))) {
-//            printf("******** %s\n", vars_ptr->prototype);
+
             vars_ptr = vars_ptr->next;
             continue;
         }
@@ -581,51 +516,37 @@ printf("\n");
             vars_ptr->print_function(vars_ptr);
             vars_ptr->sym_type = funcs_ptr->sym_type;
             sym_type_to_find = funcs_ptr->sym_type;
-//printf("%s: %d, %s: %d\n", funcs_ptr->name, funcs_ptr->linenum, vartofind, vars_ptr->linenum);        
+
             break;
         }
         funcs_ptr = funcs_ptr->next;
      }
 
      funcs_ptr = funcs_symbol_table_head;
-//printf("%s\n", vars_ptr->prototype);
-//     if ((func == vars_ptr->sym_type) && (tdef != vars_ptr->sym_type))
-//     if (func == sym_type_to_find)
+
      while (NULL != funcs_ptr) {
-//if(strncmp("main", funcs_ptr->name, 4) == 0)         
-//printf("%s: %d, %d\n", funcs_ptr->name, funcs_ptr->linenum, vars_ptr->linenum);        
-//        if (vars_ptr->linenum < funcs_ptr->linenum) {
-//            printf("Referenced here:\n");
-//        }
-//        else
+
         if (funcs_ptr->linenum < vars_ptr->linenum &&
             (NULL == funcs_ptr->next ||
             funcs_ptr->next->linenum > vars_ptr->linenum)) {
-#if 1
-//            if (func == vars_ptr->sym_type) {
-//               if (vars_ptr->linenum == funcs_ptr->linenum) {
-//                  printf("\nDefined here:\n"); 
-//               }
-//               else {
-     if (func == sym_type_to_find)
-                  printf("\nCalled by:\n"); 
-     else
-            printf("\nReferenced here:\n");
 
-//               }
+                if (func == sym_type_to_find) {
+                    printf("\nCalled by:\n");
+                }
+                else {
+                    printf("\nReferenced here:\n");
+                }
+
             }
             else {
-#endif
-               funcs_ptr = funcs_ptr->next;
-               continue; 
-//               printf("\nReferenced here:\n"); 
+                funcs_ptr = funcs_ptr->next;
+                continue; 
             }
 
             funcs_ptr->print_function(funcs_ptr);
             vars_ptr->print_function(vars_ptr);
             funcs_ptr = funcs_symbol_table_head;
             break;
-//        funcs_ptr = funcs_ptr->next;
      }
 
     vars_ptr = vars_ptr->next;
