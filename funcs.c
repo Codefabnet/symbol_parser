@@ -59,9 +59,9 @@ void * parse_proto_string( char *bufptr )
     return (void *)bufptr;
 }
 
- void * parse_symbol_type( char *bufptr )
+void *parse_symbol_type( char *bufptr )
 {
-   uint32_t rval = 0;
+   uint64_t rval = 0;
 
     switch ((char)*bufptr) {
         case 'd':
@@ -148,6 +148,7 @@ typedef struct line_schema {
 }line_schema_t;
 
 typedef void (*print_file_symbols_function)(symbol_def_t *s_table);
+typedef bool (*symbol_skip_function)(symbol_def_t *s_table);
 
 typedef symbol_def_t *(*symbol_table_alloc_func_t)(void);
 typedef void(*symbol_table_dealloc_func_t)(void);
@@ -156,6 +157,8 @@ typedef void(*symbol_table_dealloc_func_t)(void);
 struct symbol_def {
 //typedef struct symbol_def {
     struct symbol_def *next;
+    struct symbol_def **head;
+    uint32_t index;
     char *bufptr;
     uint8_t count;
     line_schema_t line_schema[last_plus_one];
@@ -163,16 +166,27 @@ struct symbol_def {
     char *filename;
     char *prototype;
     enum symboltype sym_type;
-    int linenum;
+    uint64_t linenum;
     print_file_symbols_function print_function;
+    symbol_skip_function skip_function;
     symbol_table_dealloc_func_t dealloc_function;
 //}symbol_def_t;
 };
 
 
+bool skip_vars_symbol(symbol_def_t *s_table)
+{
+    return false;
+}
+
+bool skip_funcs_symbol(symbol_def_t *s_table)
+{
+    return ((s_table->sym_type != func) && (s_table->sym_type != var));
+}
+
 void print_vars_file_symbols_line(symbol_def_t *s_table)
 {
-    printf("%d\t%s\t%s\n", s_table->linenum, s_table->filename, s_table->prototype);
+    printf("%ld\t%s\t%s\n", s_table->linenum, s_table->filename, s_table->prototype);
 //    printf("%d\t%s\n", s_table->linenum, s_table->prototype);
 
 }
@@ -181,34 +195,75 @@ void print_funcs_file_symbols_line(symbol_def_t *s_table)
 {
 //    if (s_table->sym_type == func) {
 //        printf("%d\t%s\n", s_table->linenum, s_table->name);
-        printf("%d:  %s, in file: %s\n", s_table->linenum, s_table->prototype, s_table->filename);
+        printf("%d: %s\n\t%s\n\tfile: %s \tline: %ld\n\n", s_table->index, s_table->name, s_table->prototype, s_table->filename, s_table->linenum);
 //    }
 }
 
 symbol_def_t *funcs_symbol_table_head = NULL;
 symbol_def_t *vars_symbol_table_head = NULL;
 
-symbol_def_t *allocate_symbol_table( symbol_def_t **symbol_table_head ) {
+symbol_def_t *get_symbol_table_indexed(symbol_def_t **symbol_table_head, const uint32_t index) {
 
-    symbol_def_t *s_table_ptr = NULL;
+   symbol_def_t *s_table = NULL;
 
-    s_table_ptr = malloc(sizeof(symbol_def_t));
+   if (NULL != *symbol_table_head) {
+       symbol_def_t *ptr = *symbol_table_head;
+
+
+       // Walk the list starting at head->next until the 
+       // last element, whose next pointer is NULL
+       while ((index != ptr->index) && (NULL != ptr->next)) {
+           ptr = ptr->next;
+       }
+
+       if (index == ptr->index) {
+           s_table = ptr;
+       }
+   }
+
+   return s_table;
+}
+
+
+
+
+
+//symbol_def_t *allocate_symbol_table( symbol_def_t **symbol_table_head ) {
+uint32_t append_symbol_table( symbol_def_t *s_table_ptr) {
+
+//    symbol_def_t *s_table_ptr = NULL;
+     uint32_t index = 0;
+
+//    s_table_ptr = malloc(sizeof(symbol_def_t));
     if (NULL != s_table_ptr) {
         s_table_ptr->next = NULL;
 
-        if (NULL == *symbol_table_head) {
-            *symbol_table_head = s_table_ptr;
+        // If first erlement, set head.
+        if (NULL == *s_table_ptr->head) {
+            s_table_ptr->index = 0;
+            *s_table_ptr->head = s_table_ptr;
         }
+        // else add to tail.
         else {
-            symbol_def_t *ptr = *symbol_table_head;
-            while (ptr->next != NULL) {
+            symbol_def_t *ptr = *s_table_ptr->head;
+
+            // index at head->next is 1.
+            index = 1;  
+
+            // Walk the list starting at head->next until the 
+            // last element, whose next pointer is NULL
+            while (NULL != ptr->next) {
                 ptr = ptr->next;
+                index++;
             }
+
+            // Set the index for the added element.
+            s_table_ptr->index = index;
             ptr->next = s_table_ptr;
         }
     }
     s_table_ptr->sym_type = invalid_type;
-    return s_table_ptr;
+    return index;
 }
 
 void deallocate_symbol_table( symbol_def_t **symbol_table_head )
@@ -247,7 +302,8 @@ symbol_def_t *allocate_funcs_symbol_table() {
 
    symbol_def_t *s_table_ptr;
 
-   s_table_ptr = allocate_symbol_table(&funcs_symbol_table_head);
+   s_table_ptr = malloc(sizeof(symbol_def_t));
+//   s_table_ptr = allocate_symbol_table(&funcs_symbol_table_head);
 
    s_table_ptr->line_schema[name_f_idx]      = (line_schema_t) {.symbol = (void**)&s_table_ptr->name,
                                                           .delimiter = "\t",
@@ -268,7 +324,9 @@ symbol_def_t *allocate_funcs_symbol_table() {
                                                           .delimiter = NULL,
                                                           .parse_function = NULL};
    s_table_ptr->print_function = print_funcs_file_symbols_line;
+   s_table_ptr->skip_function = skip_funcs_symbol;
    s_table_ptr->dealloc_function = deallocate_funcs_symbol_table;
+   s_table_ptr->head = &funcs_symbol_table_head;
    return s_table_ptr;
 
 }
@@ -277,7 +335,8 @@ symbol_def_t *allocate_vars_symbol_table() {
 
    symbol_def_t *s_table_ptr;
 
-   s_table_ptr = allocate_symbol_table(&vars_symbol_table_head);
+   s_table_ptr = malloc(sizeof(symbol_def_t));
+//   s_table_ptr = allocate_symbol_table(&vars_symbol_table_head);
 
    s_table_ptr->line_schema[filename_v_idx]      = (line_schema_t) {.symbol = (void**)&s_table_ptr->filename,
                                                           .delimiter =  ":",
@@ -292,7 +351,9 @@ symbol_def_t *allocate_vars_symbol_table() {
                                                           .delimiter = NULL,
                                                           .parse_function = NULL};
    s_table_ptr->print_function = print_vars_file_symbols_line;
+   s_table_ptr->skip_function = skip_vars_symbol;
    s_table_ptr->dealloc_function = deallocate_vars_symbol_table;
+   s_table_ptr->head = &vars_symbol_table_head;
    return s_table_ptr;
 
 }
@@ -340,7 +401,7 @@ void print_funcs_file_symbols_table(symbol_def_t *s_table) {
             break;
 
     };
-    printf("line number = %d\n", s_table->linenum);
+    printf("line number = %ld\n", s_table->linenum);
 
 }
 
@@ -371,6 +432,7 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream)
         int i=0;
         char *bufptr;
 
+        // Parse a ctag line from file
         bufptr = s_table_ptr->bufptr;
         if (s_table_ptr->line_schema[0].delimiter) {
            do {
@@ -380,8 +442,15 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream)
               bufptr = NULL;
            } while (s_table_ptr->line_schema[++i].delimiter);
         }
-//        s_table_ptr->print_function(s_table_ptr);
+        if (!s_table_ptr->skip_function(s_table_ptr)) {
+            append_symbol_table(s_table_ptr);
 
+            // Print the table of ctag elemente.
+            s_table_ptr->print_function(s_table_ptr);
+        }
+
+
+        // Set up for the next ctag line.
         bufptr = malloc(BUFSIZE);
         count = getline(&bufptr, &bufsize, stream);
 
@@ -431,7 +500,7 @@ main (int argc, char **argv)
       snprintf(command, sizeof(command), "grep --include=*.c -IRn %s *", vartofind);
   }
   else {
-      if (2 >= argc) {
+      if (2 <= argc) {
           filetoparse = argv[1];
       }
       else {
@@ -453,6 +522,15 @@ main (int argc, char **argv)
 
   read_data (alloc_func, output);
 
+  uint32_t index = 0;
+  char c;
+  while ('\n' != (c = getchar())) {
+
+    index = (index * 10) + (uint8_t)c - 0x30;
+
+    find_variables = true;
+  }
+
   if (pclose (output) != 0) {
       fprintf (stderr, "Could not run more or other error.\n");
   }
@@ -462,12 +540,31 @@ main (int argc, char **argv)
       return EXIT_SUCCESS;
   }
 
+  symbol_def_t *s_table = get_symbol_table_indexed(&funcs_symbol_table_head, index);
+
+  vartofind = s_table->name;
+#if 1
+  alloc_func = allocate_vars_symbol_table;
+  dealloc_func = deallocate_vars_symbol_table;
+
+  //  -u to turn off sort, 
+  snprintf(command, sizeof(command), "grep --include=*.c -IRn %s *", vartofind);
+
+  output = popen (command, "r");
+  if (!output) {
+      printf ("incorrect parameters or too many files.\n");
+      return EXIT_FAILURE;
+  }
+
+  read_data (alloc_func, output);
+#endif
 
   vars_ptr = vars_symbol_table_head;
+  vars_ptr->filename = s_table->filename;
+
   while (NULL != vars_ptr && vars_ptr->filename != NULL) {
 
-     if (symbol_filename == NULL ||
-        strcmp(symbol_filename, vars_ptr->filename) != 0) {
+     if (symbol_filename == NULL || strcmp(symbol_filename, vars_ptr->filename) != 0) {
         symbol_filename = vars_ptr->filename;    
 
         alloc_func = allocate_funcs_symbol_table;
