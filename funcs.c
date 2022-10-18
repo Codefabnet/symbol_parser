@@ -406,7 +406,7 @@ void print_funcs_file_symbols_table(symbol_def_t *s_table) {
 }
 
 
-void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream)
+void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream, bool print_entries)
 {
     size_t bufsize = BUFSIZE;
     int count = 0;
@@ -445,8 +445,10 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream)
         if (!s_table_ptr->skip_function(s_table_ptr)) {
             append_symbol_table(s_table_ptr);
 
-            // Print the table of ctag elemente.
-            s_table_ptr->print_function(s_table_ptr);
+            if (print_entries) {
+                // Print the table of ctag elemente.
+                s_table_ptr->print_function(s_table_ptr);
+            }
         }
 
 
@@ -483,6 +485,7 @@ main (int argc, char **argv)
   symbol_def_t *funcs_ptr;
   char *symbol_filename = NULL;
   enum symboltype sym_type_to_find = invalid_type;
+  symbol_def_t *s_table_target;
 
   if (strstr(argv[0], "vars") != NULL) {
       if (2 >= argc) {
@@ -520,7 +523,7 @@ main (int argc, char **argv)
   }
 //  write_data (output);
 
-  read_data (alloc_func, output);
+  read_data (alloc_func, output, true);
 
   uint32_t index = 0;
   char c;
@@ -556,7 +559,7 @@ main (int argc, char **argv)
       return EXIT_FAILURE;
   }
 
-  read_data (alloc_func, output);
+  read_data (alloc_func, output, false);
 #endif
 
   vars_ptr = vars_symbol_table_head;
@@ -581,11 +584,15 @@ main (int argc, char **argv)
             return EXIT_FAILURE;
         }
 
-        read_data (alloc_func, output);
+        read_data (alloc_func, output, false);
         pclose (output);
 
         funcs_ptr = funcs_symbol_table_head;
+
+        symbol_def_t *s_table_target = get_symbol_table_indexed(&funcs_symbol_table_head, index);
+
      }
+#if 0
      if (NULL != vars_ptr->prototype) {
         char *print_pos = strstr(vars_ptr->prototype, "print"); 
 
@@ -618,6 +625,22 @@ main (int argc, char **argv)
         }
         funcs_ptr = funcs_ptr->next;
      }
+#endif
+     funcs_ptr = s_table_target;
+
+     while (vars_ptr->linenum != funcs_ptr->linenum) {
+        if (vars_ptr->next == NULL) {
+            return -1;
+        }
+        vars_ptr = vars_ptr->next;
+     }
+
+     printf("\nDefined here:\n");
+     funcs_ptr->print_function(funcs_ptr);
+     vars_ptr->print_function(vars_ptr);
+     vars_ptr->sym_type = funcs_ptr->sym_type;
+     sym_type_to_find = funcs_ptr->sym_type;
+
 
      funcs_ptr = funcs_symbol_table_head;
 
