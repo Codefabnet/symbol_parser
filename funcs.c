@@ -589,9 +589,9 @@ main (int argc, char **argv)
 
         funcs_ptr = funcs_symbol_table_head;
 
-        symbol_def_t *s_table_target = get_symbol_table_indexed(&funcs_symbol_table_head, index);
 
      }
+     s_table_target = get_symbol_table_indexed(&funcs_symbol_table_head, index);
 #if 0
      if (NULL != vars_ptr->prototype) {
         char *print_pos = strstr(vars_ptr->prototype, "print"); 
@@ -643,6 +643,7 @@ main (int argc, char **argv)
 
 
      funcs_ptr = funcs_symbol_table_head;
+     vars_ptr = vars_symbol_table_head;
 
      while (NULL != funcs_ptr) {
 
