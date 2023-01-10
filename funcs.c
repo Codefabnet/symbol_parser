@@ -168,6 +168,7 @@ struct symbol_def {
     enum symboltype sym_type;
     uint64_t linenum;
     print_file_symbols_function print_function;
+    print_file_symbols_function reference_print_function;
     symbol_skip_function skip_function;
     symbol_table_dealloc_func_t dealloc_function;
 //}symbol_def_t;
@@ -191,11 +192,28 @@ void print_vars_file_symbols_line(symbol_def_t *s_table)
 
 }
 
+void print_vars_file_reference_line(symbol_def_t *s_table)
+{
+    printf("%ld: %s\n", s_table->linenum, s_table->prototype);
+//    printf("%d\t%s\n", s_table->linenum, s_table->prototype);
+
+}
+
 void print_funcs_file_symbols_line(symbol_def_t *s_table)
 {
 //    if (s_table->sym_type == func) {
 //        printf("%d\t%s\n", s_table->linenum, s_table->name);
-        printf("%d: %s\n\t%s\n\tfile: %s \tline: %ld\n\n", s_table->index, s_table->name, s_table->prototype, s_table->filename, s_table->linenum);
+        printf("%d: %s\n\t%s\n\tSource File: %s \tReference Function Line Number: %ld\n\n", s_table->index, s_table->name, s_table->prototype, s_table->filename, s_table->linenum);
+//        printf("\nFile: %s\n%d: \nFunction \n%ld: %s", s_table->filename, s_table->index, s_table->linenum, s_table->prototype);
+//    }
+}
+
+void print_funcs_file_reference_line(symbol_def_t *s_table)
+{
+//    if (s_table->sym_type == func) {
+//        printf("%d\t%s\n", s_table->linenum, s_table->name);
+//        printf("%d: %s\n\t%s\n\tSource File: %s \tReference Function Line Number: %ld\n\n", s_table->index, s_table->name, s_table->prototype, s_table->filename, s_table->linenum);
+        printf("%s\n%ld: %s\n", s_table->filename, s_table->linenum, s_table->prototype);
 //    }
 }
 
@@ -324,6 +342,7 @@ symbol_def_t *allocate_funcs_symbol_table() {
                                                           .delimiter = NULL,
                                                           .parse_function = NULL};
    s_table_ptr->print_function = print_funcs_file_symbols_line;
+   s_table_ptr->reference_print_function = print_funcs_file_reference_line;
    s_table_ptr->skip_function = skip_funcs_symbol;
    s_table_ptr->dealloc_function = deallocate_funcs_symbol_table;
    s_table_ptr->head = &funcs_symbol_table_head;
@@ -351,6 +370,7 @@ symbol_def_t *allocate_vars_symbol_table() {
                                                           .delimiter = NULL,
                                                           .parse_function = NULL};
    s_table_ptr->print_function = print_vars_file_symbols_line;
+   s_table_ptr->reference_print_function = print_vars_file_reference_line;
    s_table_ptr->skip_function = skip_vars_symbol;
    s_table_ptr->dealloc_function = deallocate_vars_symbol_table;
    s_table_ptr->head = &vars_symbol_table_head;
@@ -490,6 +510,7 @@ main (int argc, char **argv)
   char *symbol_filename = NULL;
   enum symboltype sym_type_to_find = invalid_type;
   symbol_def_t *s_table_target;
+  uint32_t index = 0;
 
   if (strstr(argv[0], "vars") != NULL) {
       if (2 >= argc) {
@@ -505,6 +526,16 @@ main (int argc, char **argv)
 
       //  -u to turn off sort, 
       snprintf(command, sizeof(command), "grep --include=*.c -IRn %s *", &var_target[0]);
+
+     output = popen (command, "r");
+     if (!output) {
+         printf ("incorrect parameters or too many files.\n");
+         return EXIT_FAILURE;
+     }
+//  write_data (output);
+
+     read_data (alloc_func, output, true);
+
   }
   else {
       if (2 <= argc) {
@@ -518,41 +549,41 @@ main (int argc, char **argv)
       dealloc_func = deallocate_funcs_symbol_table;
 
       snprintf(command, sizeof(command), "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk", filetoparse);
-  }
+//  }
 
-  output = popen (command, "r");
-  if (!output) {
-      printf ("incorrect parameters or too many files.\n");
-      return EXIT_FAILURE;
-  }
+     output = popen (command, "r");
+     if (!output) {
+         printf ("incorrect parameters or too many files.\n");
+         return EXIT_FAILURE;
+     }
 //  write_data (output);
 
-  read_data (alloc_func, output, true);
+     read_data (alloc_func, output, true);
 
-  uint32_t index = 0;
-  char c;
-  while ('\n' != (c = getchar())) {
+     char c;
+     while ('\n' != (c = getchar())) {
 
-    index = (index * 10) + (uint8_t)c - 0x30;
+       index = (index * 10) + (uint8_t)c - 0x30;
 
-    find_variables = true;
+       find_variables = true;
+     }
+
+     if (pclose (output) != 0) {
+         fprintf (stderr, "Could not run more or other error.\n");
+     }
+
+     if (false == find_variables) {
+         dealloc_func();
+         return EXIT_SUCCESS;
+     }
+
+     symbol_def_t *s_table = get_symbol_table_indexed(&funcs_symbol_table_head, index);
+
+     strncpy(var_target, s_table->name, VAR_LEN);
+     strncpy(filename_target, s_table->filename, VAR_LEN);
+     linenum_target = s_table->linenum;
+     sym_type_target = s_table->sym_type;
   }
-
-  if (pclose (output) != 0) {
-      fprintf (stderr, "Could not run more or other error.\n");
-  }
-
-  if (false == find_variables) {
-      dealloc_func();
-      return EXIT_SUCCESS;
-  }
-
-  symbol_def_t *s_table = get_symbol_table_indexed(&funcs_symbol_table_head, index);
-
-  strncpy(var_target, s_table->name, VAR_LEN);
-  strncpy(filename_target, s_table->filename, VAR_LEN);
-  linenum_target = s_table->linenum;
-  sym_type_target = s_table->sym_type;
 #if 1
   alloc_func = allocate_vars_symbol_table;
   dealloc_func = deallocate_vars_symbol_table;
@@ -566,7 +597,7 @@ main (int argc, char **argv)
       return EXIT_FAILURE;
   }
 
-  read_data (alloc_func, output, true);
+  read_data (alloc_func, output, false);
 #endif
 
   vars_ptr = vars_symbol_table_head;
@@ -646,7 +677,7 @@ main (int argc, char **argv)
      if ((vars_ptr->linenum == linenum_target) &&
             (strncmp(vars_ptr->filename, filename_target, strlen(filename_target)) == 0)) {
          printf("\nDefined here:\n");
-         s_table_target->print_function(s_table_target);
+         s_table_target->reference_print_function(s_table_target);
          vars_ptr->print_function(vars_ptr);
          vars_ptr->sym_type = s_table_target->sym_type;
          sym_type_to_find = s_table_target->sym_type;
@@ -674,15 +705,15 @@ main (int argc, char **argv)
             continue; 
         }
 
-        funcs_ptr->print_function(funcs_ptr);
-        vars_ptr->print_function(vars_ptr);
+        funcs_ptr->reference_print_function(funcs_ptr);
+        printf(" :\n");
+        vars_ptr->reference_print_function(vars_ptr);
         funcs_ptr = funcs_symbol_table_head;
         break;
      }
 
     vars_ptr = vars_ptr->next;
   }
-
 
   return EXIT_SUCCESS;
 }
