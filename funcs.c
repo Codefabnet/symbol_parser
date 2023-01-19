@@ -256,7 +256,7 @@ uint32_t append_symbol_table( symbol_def_t *s_table_ptr) {
     if (NULL != s_table_ptr) {
         s_table_ptr->next = NULL;
 
-        // If first erlement, set head.
+        // If first element, set head.
         if (NULL == *s_table_ptr->head) {
             s_table_ptr->index = 0;
             *s_table_ptr->head = s_table_ptr;
@@ -316,6 +316,7 @@ void deallocate_vars_symbol_table(void)
     deallocate_symbol_table(&vars_symbol_table_head);
 }
 
+// The schema array and the operation functions determine the parse type, in this case a "funcs" parse.
 symbol_def_t *allocate_funcs_symbol_table() {
 
    symbol_def_t *s_table_ptr;
@@ -350,6 +351,7 @@ symbol_def_t *allocate_funcs_symbol_table() {
 
 }
 
+// The schema array and the operation functions determine the parse type, in this case a "vars" parse.
 symbol_def_t *allocate_vars_symbol_table() {
 
    symbol_def_t *s_table_ptr;
@@ -425,7 +427,13 @@ void print_funcs_file_symbols_table(symbol_def_t *s_table) {
 
 }
 
-
+// The read_data function is the common file parser function.
+// The s_tablet_alloc function determines if a "vars" or "funcs"
+// parse is performed.
+// Parsed lines are stored in a symbol_def_t object linked list
+// starting at funcs_symbol_table_head or vars_symbol_table_head 
+// depending on the parse type, as determined by the s_table_alloc
+// function.
 void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream, bool print_entries)
 {
     size_t bufsize = BUFSIZE;
@@ -512,15 +520,21 @@ main (int argc, char **argv)
   symbol_def_t *s_table_target;
   uint32_t index = 0;
 
+  // Called as the "vars" application.
+  // Search files in the current directory for a given symbol name.
   if (strstr(argv[0], "vars") != NULL) {
+
+      // Use the symbol name from the command line if present.
       if (2 >= argc) {
           strncpy(var_target, argv[1], VAR_LEN);
       }
+      // Default to "read_data" if no symbol name is given.
       else {
           strncpy(var_target, "read_data", VAR_LEN);
       }
       find_variables = true;
 
+      // The alloc function builds a symbol table struct and populates the schema function array.
       alloc_func = allocate_vars_symbol_table;
       dealloc_func = deallocate_vars_symbol_table;
 
@@ -537,20 +551,29 @@ main (int argc, char **argv)
      read_data (alloc_func, output, true);
 
   }
+  // Called as the "funcs" application.
+  // Search in the given file for a list of symbols (functions).
   else {
+
+      // Use the filename from the command line if present.
       if (2 <= argc) {
           filetoparse = argv[1];
       }
+      // Default to "funcs.c" if no filename is given
       else {
           filetoparse = "funcs.c";
       }
 
+      // The alloc function builds a symbol table struct and populates the schema function array.
       alloc_func = allocate_funcs_symbol_table;
       dealloc_func = deallocate_funcs_symbol_table;
 
       snprintf(command, sizeof(command), "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk", filetoparse);
 //  }
 
+     // The "command" commandline is generated depending on application name invoked.
+     //    For "vars", the command is a grep command.
+     //    For "funcs", the command is a ctags filter mode command.
      output = popen (command, "r");
      if (!output) {
          printf ("incorrect parameters or too many files.\n");
