@@ -498,12 +498,43 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream, bool pri
 //    s_table_ptr->dealloc_function();    
 }
 
+
+bool run_parse(const symbol_table_alloc_func_t alloc_func,
+               const symbol_table_dealloc_func_t dealloc_func,
+               const char *const parse_string,
+               const char *const symbol_filename,
+               const bool print_list)
+{
+    FILE *output;
+    char command[120];
+
+    // Clear the function symbols linked list.
+    dealloc_func();
+
+    snprintf(command, sizeof(command), parse_string, symbol_filename);
+
+    printf("\n");
+    output = popen (command, "r");
+    if (!output) {
+        fprintf (stderr, "incorrect parameters or too many files.\n");
+        return false;
+    }
+
+    read_data (alloc_func, output, print_list);
+    pclose (output);
+
+    return true;
+}
+
+
 #define VAR_LEN 80
 int
 main (int argc, char **argv)
 {
   FILE *output;
   char command[120];
+  const char *vars_command_string = "grep --include=*.c -IRn %s *"; 
+  const char *funcs_command_string = "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk";
   char *filetoparse = NULL;
   char var_target[VAR_LEN];
   char filename_target[VAR_LEN];
@@ -564,6 +595,7 @@ main (int argc, char **argv)
           filetoparse = "funcs.c";
       }
 
+#if 0
       // The alloc function builds a symbol table struct and populates the schema function array.
       alloc_func = allocate_funcs_symbol_table;
       dealloc_func = deallocate_funcs_symbol_table;
@@ -582,6 +614,12 @@ main (int argc, char **argv)
 //  write_data (output);
 
      read_data (alloc_func, output, true);
+#endif
+     run_parse(allocate_funcs_symbol_table,
+               deallocate_funcs_symbol_table,
+               funcs_command_string,
+               filetoparse, true); 
+
 
      char c;
      while ('\n' != (c = getchar())) {
@@ -591,23 +629,35 @@ main (int argc, char **argv)
        find_variables = true;
      }
 
+#if 0
      if (pclose (output) != 0) {
          fprintf (stderr, "Could not run more or other error.\n");
      }
+#endif
 
      if (false == find_variables) {
          dealloc_func();
          return EXIT_SUCCESS;
      }
 
-     symbol_def_t *s_table = get_symbol_table_indexed(&funcs_symbol_table_head, index);
+//     symbol_def_t *s_table = get_symbol_table_indexed(&funcs_symbol_table_head, index);
+     s_table_target = get_symbol_table_indexed(&funcs_symbol_table_head, index);
 
-     strncpy(var_target, s_table->name, VAR_LEN);
-     strncpy(filename_target, s_table->filename, VAR_LEN);
-     linenum_target = s_table->linenum;
-     sym_type_target = s_table->sym_type;
+     // var _target will be used in the grep command below.
+     strncpy(var_target, s_table_target->name, VAR_LEN);
+
+     // filenaame_target will be used to compare with the grep output below.
+     strncpy(filename_target, s_table_target->filename, VAR_LEN);
+     linenum_target = s_table_target->linenum;
+     sym_type_target = s_table_target->sym_type;
   }
-#if 1
+
+//////////////////////////////////////////////////////////////////////////////////////
+// Run the grep command for the sysbol selected above, in var_target
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////
+#if 0
   alloc_func = allocate_vars_symbol_table;
   dealloc_func = deallocate_vars_symbol_table;
 
@@ -622,18 +672,32 @@ main (int argc, char **argv)
 
   read_data (alloc_func, output, false);
 #endif
+  run_parse(allocate_vars_symbol_table,
+            deallocate_vars_symbol_table,
+            vars_command_string,
+            var_target, false); 
 
   vars_ptr = vars_symbol_table_head;
-//  vars_ptr->filename = s_table->filename;
 
+  printf("vars_ptr->filename: %s\n", vars_ptr->filename);
+
+//////////////////////////////////////////////////////////////////////////////////////
+// Parse the grep output
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////
   while (NULL != vars_ptr && vars_ptr->filename != NULL) {
 
+     // For the first, and each unique filename in the vars linked list
+     // get the function list for the given filename.
      if ((NULL == symbol_filename) || (strcmp(symbol_filename, vars_ptr->filename) != 0)) {
-        symbol_filename = vars_ptr->filename;    
+        symbol_filename = vars_ptr->filename;
 
+#if 0
         alloc_func = allocate_funcs_symbol_table;
         dealloc_func = deallocate_funcs_symbol_table;
 
+        // Clear the function symbols linked list.
         deallocate_funcs_symbol_table();
 
         snprintf(command, sizeof(command), "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk", symbol_filename);
@@ -647,12 +711,21 @@ main (int argc, char **argv)
 
         read_data (alloc_func, output, false);
         pclose (output);
+#endif
+        run_parse(allocate_funcs_symbol_table,
+                  deallocate_funcs_symbol_table,
+                  funcs_command_string,
+                  filetoparse, false); 
+
 
         funcs_ptr = funcs_symbol_table_head;
 
 
      }
-     s_table_target = get_symbol_table_indexed(&funcs_symbol_table_head, index);
+
+     // TODO: bad reuse of the index 
+//     s_table_target = get_symbol_table_indexed(&funcs_symbol_table_head, index);
+
 #if 0
      if (NULL != vars_ptr->prototype) {
         char *print_pos = strstr(vars_ptr->prototype, "print"); 
@@ -736,6 +809,7 @@ main (int argc, char **argv)
      }
 
     vars_ptr = vars_ptr->next;
+    printf("vars_ptr->filename: %s\n", vars_ptr->filename);
   }
 
   return EXIT_SUCCESS;
