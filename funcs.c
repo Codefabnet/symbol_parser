@@ -661,26 +661,6 @@ main (int argc, char **argv)
           filetoparse = "funcs.c";
       }
 
-#if 0
-      // The alloc function builds a symbol table struct and populates the schema function array.
-      alloc_func = allocate_funcs_symbol_table;
-      dealloc_func = deallocate_funcs_symbol_table;
-
-      snprintf(command, sizeof(command), "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk", filetoparse);
-//  }
-
-     // The "command" commandline is generated depending on application name invoked.
-     //    For "vars", the command is a grep command.
-     //    For "funcs", the command is a ctags filter mode command.
-     output = popen (command, "r");
-     if (!output) {
-         printf ("incorrect parameters or too many files.\n");
-         return EXIT_FAILURE;
-     }
-//  write_data (output);
-
-     read_data (alloc_func, output, true);
-#endif
      run_parse(allocate_funcs_symbol_table,
                deallocate_funcs_symbol_table,
                funcs_command_string,
@@ -695,11 +675,6 @@ main (int argc, char **argv)
        find_variables = true;
      }
 
-#if 0
-     if (pclose (output) != 0) {
-         fprintf (stderr, "Could not run more or other error.\n");
-     }
-#endif
 
      if (false == find_variables) {
          dealloc_func();
@@ -714,11 +689,9 @@ main (int argc, char **argv)
 //     s_table_target = copy_s_table_data (get_symbol_table_indexed(&funcs_symbol_table_head, index));
 
 //     // var _target will be used in the grep command below.
-//     strncpy(var_target, s_table_target->name, VAR_LEN);
      var_target = s_table_target->name;
 
 //     // filenaame_target will be used to compare with the grep output below.
-//     strncpy(filename_target, s_table_target->filename, VAR_LEN);
      filename_target = s_table_target->filename;
 //printf("%s, %s\n", var_target, filename_target);
 
@@ -732,21 +705,6 @@ main (int argc, char **argv)
 //
 //
 //////////////////////////////////////////////////////////////////////////////////////
-#if 0
-  alloc_func = allocate_vars_symbol_table;
-  dealloc_func = deallocate_vars_symbol_table;
-
-  //  -u to turn off sort, 
-  snprintf(command, sizeof(command), "grep --include=*.c -IRn %s *", var_target);
-
-  output = popen (command, "r");
-  if (!output) {
-      printf ("incorrect parameters or too many files.\n");
-      return EXIT_FAILURE;
-  }
-
-  read_data (alloc_func, output, false);
-#endif
   run_parse(allocate_vars_symbol_table,
             deallocate_vars_symbol_table,
             vars_command_string,
@@ -768,30 +726,10 @@ main (int argc, char **argv)
      if ((NULL == symbol_filename) || (strcmp(symbol_filename, vars_ptr->filename) != 0)) {
         symbol_filename = vars_ptr->filename;
 
-#if 0
-        alloc_func = allocate_funcs_symbol_table;
-        dealloc_func = deallocate_funcs_symbol_table;
-
-        // Clear the function symbols linked list.
-        deallocate_funcs_symbol_table();
-
-        snprintf(command, sizeof(command), "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk", symbol_filename);
-
-        printf("\n");
-        output = popen (command, "r");
-        if (!output) {
-            fprintf (stderr, "incorrect parameters or too many files.\n");
-            return EXIT_FAILURE;
-        }
-
-        read_data (alloc_func, output, false);
-        pclose (output);
-#endif
         run_parse(allocate_funcs_symbol_table,
                   deallocate_funcs_symbol_table,
                   funcs_command_string,
                   symbol_filename, false); 
-//                  filetoparse, false); 
 
         // Resestting the func_ptr head after rerunning the funcs parse with new filename
         funcs_ptr = funcs_symbol_table_head;
@@ -799,74 +737,12 @@ main (int argc, char **argv)
 
      }
 
-     // TODO: bad reuse of the index 
-//     s_table_target = get_symbol_table_indexed(&funcs_symbol_table_head, index);
-
-#if 0
-     if (NULL != vars_ptr->prototype) {
-        char *print_pos = strstr(vars_ptr->prototype, "print"); 
-
-        if ((NULL != print_pos) && (print_pos < strstr(vars_ptr->prototype, var_target))) {
-
-            vars_ptr = vars_ptr->next;
-            continue;
-        }
-        print_pos = strstr(vars_ptr->prototype, "//"); 
-        if ((NULL != print_pos) && (print_pos < strstr(vars_ptr->prototype, var_target))) {
-
-            vars_ptr = vars_ptr->next;
-            continue;
-        }
-     }
-
-     while (NULL != funcs_ptr) {
-        
-        if ((vars_ptr->linenum == funcs_ptr->linenum) &&
-            (strncmp(var_target, funcs_ptr->name, strlen(var_target)) == 0) &&
-            (func == funcs_ptr->sym_type || tdef == funcs_ptr->sym_type)) {
-
-            printf("\nDefined here:\n");
-            funcs_ptr->print_function(funcs_ptr);
-            vars_ptr->print_function(vars_ptr);
-            vars_ptr->sym_type = funcs_ptr->sym_type;
-            sym_type_to_find = funcs_ptr->sym_type;
-
-            break;
-        }
-        funcs_ptr = funcs_ptr->next;
-     }
-#endif
      // Resestting the func_ptr head the last run funcs parse
      funcs_ptr = funcs_symbol_table_head;
-#if 0
-     while ((vars_ptr->linenum != funcs_ptr->linenum) &&
-            (strncmp(vars_ptr->filename, funcs_ptr->filename, sizeof(funcs_ptr->filename)) > 0)) {
-        if (vars_ptr->next == NULL) {
-            return -1;
-        }
-        vars_ptr = vars_ptr->next;
-     }
-#endif
-#if 0
-//     if ((vars_ptr->linenum == linenum_target) &&
-//            (strncmp(vars_ptr->filename, filename_target, strlen(filename_target)) == 0)) {
-     if ((vars_ptr->linenum == funcs_ptr->linenum)) { // &&
-//            (strncmp(vars_ptr->filename, funcs_ptr->filename, strlen(vars_ptr->filename)) == 0)) {
-         printf("\nDefined here:\n");
-         s_table_target->reference_print_function(s_table_target);
-         vars_ptr->print_function(vars_ptr);
-         vars_ptr->sym_type = s_table_target->sym_type;
-         sym_type_to_find = s_table_target->sym_type;
-     }
-#endif
-
-//     funcs_ptr = funcs_symbol_table_head;
-//     vars_ptr = vars_symbol_table_head;
 
      while (NULL != funcs_ptr) {
 
         if ((vars_ptr->linenum == funcs_ptr->linenum)) { // &&
-   //            (strncmp(vars_ptr->filename, funcs_ptr->filename, strlen(vars_ptr->filename)) == 0)) {
             printf("\nDefined here:\n");
             funcs_ptr->reference_print_function(funcs_ptr);
             vars_ptr->print_function(vars_ptr);
