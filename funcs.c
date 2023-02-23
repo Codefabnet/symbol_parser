@@ -1,11 +1,8 @@
 
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
+#include "symbol_target_structs.h"
+#include "funcs_parse_functions.h"
 
 void
 write_data (FILE * stream)
@@ -23,20 +20,6 @@ write_data (FILE * stream)
 
     fprintf (stream, "test.c\n");
 }
-
-
-enum symboltype {
-    macro = 0,  // d
-    var,    // v
-    func,   // f
-    proto,  // p
-    strct,  // s
-    enm,    // g
-    member, // m
-    enmm,   // e
-    tdef,   // t
-    invalid_type
-};
 
 //char *parse_proto_string( char *bufptr )
 void * parse_proto_string( char *bufptr )
@@ -109,81 +92,27 @@ void *parse_vars_line_number( char *bufptr )
 {
    return (void *)strtol(bufptr, NULL, 10);
 }
-
-void *parse_line_number( char *bufptr )
+#if 0
+void *parse_funcs_line_number( char *bufptr )
 {
    return (void *)strtol(strchr(bufptr, ':')+1, NULL, 10);
 }
-
+#endif
 void * parse_default( char *bufptr )
 {
    return (void *)bufptr;
 }
 
-enum funcs_fields {
-    name_f_idx        = 0,
-    filename_f_idx    = 1,
-    prototype_f_idx   = 2,
-    symboltype_f_idx  = 3,
-    linenum_f_idx     = 4,
-    null_term_f_idx   = 5,
-    last_plus_one_f_idx = 6,
-    last_plus_one = last_plus_one_f_idx
-};
-
-enum vars_fields {
-    filename_v_idx    = 0,
-    linenum_v_idx     = 1,
-    prototype_v_idx   = 2,
-    null_term_v_idx   = 3,
-    last_plus_one_v_idx = 4
-};
-
-typedef struct symbol_def symbol_def_t;
-
-typedef struct line_schema {
-   void **symbol;
-   char *delimiter;
-   void *(*parse_function)(char *bufptr);
-}line_schema_t;
-
-typedef void (*print_file_symbols_function)(symbol_def_t *s_table);
-typedef bool (*symbol_skip_function)(symbol_def_t *s_table);
-
-typedef symbol_def_t *(*symbol_table_alloc_func_t)(void);
-typedef void(*symbol_table_dealloc_func_t)(void);
-
-#define BUFSIZE 256
-struct symbol_def {
-//typedef struct symbol_def {
-    struct symbol_def *next;
-    struct symbol_def **head;
-    uint32_t index;
-    char *line_bufptr;
-    uint8_t line_char_count;
-    line_schema_t line_schema[last_plus_one];
-    char *name;
-    char *filename;
-    char *prototype;
-    enum symboltype sym_type;
-    uint64_t linenum;
-    print_file_symbols_function print_function;
-    print_file_symbols_function reference_print_function;
-    symbol_skip_function skip_function;
-    symbol_table_dealloc_func_t dealloc_function;
-//}symbol_def_t;
-};
-
-
 bool skip_vars_symbol(symbol_def_t *s_table)
 {
     return false;
 }
-
+#if 0
 bool skip_funcs_symbol(symbol_def_t *s_table)
 {
     return ((s_table->sym_type != func) && (s_table->sym_type != var));
 }
+#endif
 
 void print_vars_file_symbols_line(symbol_def_t *s_table)
 {
@@ -192,13 +121,16 @@ void print_vars_file_symbols_line(symbol_def_t *s_table)
 
 }
 
+#if 0
 void print_vars_file_reference_line(symbol_def_t *s_table)
 {
     printf("%ld: %s\n", s_table->linenum, s_table->prototype);
 //    printf("%d\t%s\n", s_table->linenum, s_table->prototype);
 
 }
+#endif
 
+#if 0
 void print_funcs_file_symbols_line(symbol_def_t *s_table)
 {
 //    if (s_table->sym_type == func) {
@@ -207,7 +139,9 @@ void print_funcs_file_symbols_line(symbol_def_t *s_table)
 //        printf("\nFile: %s\n%d: \nFunction \n%ld: %s", s_table->filename, s_table->index, s_table->linenum, s_table->prototype);
 //    }
 }
+#endif
 
+#if 0
 void print_funcs_file_reference_line(symbol_def_t *s_table)
 {
 //    if (s_table->sym_type == func) {
@@ -216,8 +150,9 @@ void print_funcs_file_reference_line(symbol_def_t *s_table)
         printf("%s\n%ld: %s\n", s_table->filename, s_table->linenum, s_table->prototype);
 //    }
 }
+#endif
 
-symbol_def_t *funcs_symbol_table_head = NULL;
+//symbol_def_t *funcs_symbol_table_head = NULL;
 symbol_def_t *vars_symbol_table_head = NULL;
 
 symbol_def_t *get_symbol_table_indexed(symbol_def_t **symbol_table_head, const uint32_t index) {
@@ -340,7 +275,7 @@ symbol_def_t *allocate_funcs_symbol_table() {
                                                           .parse_function = parse_symbol_type};
    s_table_ptr->line_schema[linenum_f_idx]   = (line_schema_t) {.symbol = (void**)&s_table_ptr->linenum,
                                                           .delimiter = "\t",
-                                                          .parse_function = parse_line_number};
+                                                          .parse_function = parse_funcs_line_number};
    s_table_ptr->line_schema[null_term_f_idx] = (line_schema_t) {.symbol = NULL,
                                                           .delimiter = NULL,
                                                           .parse_function = NULL};
