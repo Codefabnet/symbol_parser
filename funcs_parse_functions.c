@@ -128,3 +128,51 @@ symbol_def_t *allocate_funcs_symbol_table() {
    return s_table_ptr;
 
 }
+
+void print_funcs_file_symbols_table(symbol_def_t *s_table) {
+
+    printf("name = %s\n", s_table->name);
+    printf("file = %s\n", s_table->filename);
+    printf("prototype = %s\n", s_table->prototype);
+    switch (s_table->sym_type) {
+        case macro:
+            printf("symbol type = macro\n");
+            break;
+
+        case var:
+            printf("symbol type = var\n");
+            break;
+
+        case func:
+            printf("symbol type = func\n");
+            break;
+
+        case proto:
+            printf("symbol type = proto\n");
+            break;
+
+        case strct:
+            printf("symbol type = struct\n");
+            break;
+
+        case member:
+            printf("symbol type = struct member\n");
+            break;
+
+        case enm:
+            printf("symbol type = enum\n");
+            break;
+
+        case enmm:
+            printf("symbol type = enum member\n");
+            break;
+
+        case tdef:
+            printf("symbol type = typedef\n");
+            break;
+
+    };
+    printf("line number = %ld\n", s_table->linenum);
+
+}
+

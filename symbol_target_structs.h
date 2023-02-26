@@ -74,4 +74,11 @@ struct symbol_def {
 //}symbol_def_t;
 };
 
+
+
+symbol_def_t *get_symbol_table_indexed(symbol_def_t **symbol_table_head, const uint32_t index);
+uint32_t append_symbol_table( symbol_def_t *s_table_ptr);
+void deallocate_symbol_table( symbol_def_t **symbol_table_head);
+symbol_def_t *copy_s_table_data(symbol_def_t *s_table_in_ptr); 
+
 #endif //!defined(__SYMBOL_TARGET_STRUCTS_H__)
