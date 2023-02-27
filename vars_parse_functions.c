@@ -2,6 +2,13 @@
 #include "vars_parse_functions.h"
 
 symbol_def_t *vars_symbol_table_head = NULL;
+const char *vars_command_string = "grep --include=*.c -IRn %s *"; 
+
+parse_functions_t vars_parser_functions = { 
+    .command_string = "grep --include=*.c -IRn %s *",
+    .alloc_function = allocate_vars_symbol_table,
+    .dealloc_function = deallocate_vars_symbol_table
+};
 
 
 void *parse_vars_line_number( char *bufptr )

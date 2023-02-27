@@ -53,6 +53,17 @@ typedef bool (*symbol_skip_function)(symbol_def_t *s_table);
 typedef symbol_def_t *(*symbol_table_alloc_func_t)(void);
 typedef void(*symbol_table_dealloc_func_t)(void);
 
+typedef struct parse_functions {
+
+   const char *command_string;
+   symbol_table_dealloc_func_t dealloc_function;
+   symbol_table_alloc_func_t alloc_function;
+
+} parse_functions_t;
+
+
+
+
 #define BUFSIZE 256
 struct symbol_def {
 //typedef struct symbol_def {

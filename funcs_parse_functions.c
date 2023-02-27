@@ -2,7 +2,13 @@
 #include "funcs_parse_functions.h"
 
 symbol_def_t *funcs_symbol_table_head = NULL;
+const char *funcs_command_string = "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk";
 
+parse_functions_t funcs_parser_functions = { 
+    .command_string = "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk",
+    .alloc_function = allocate_funcs_symbol_table,
+    .dealloc_function = deallocate_funcs_symbol_table
+};
 
 void *parse_funcs_line_number( char *bufptr )
 {

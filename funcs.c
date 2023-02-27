@@ -20,56 +20,6 @@ write_data (FILE * stream)
 }
 
 
-#if 0
-void print_funcs_file_symbols_table(symbol_def_t *s_table) {
-
-    printf("name = %s\n", s_table->name);
-    printf("file = %s\n", s_table->filename);
-    printf("prototype = %s\n", s_table->prototype);
-    switch (s_table->sym_type) {
-        case macro:
-            printf("symbol type = macro\n");
-            break;
-
-        case var:
-            printf("symbol type = var\n");
-            break;
-
-        case func:
-            printf("symbol type = func\n");
-            break;
-
-        case proto:
-            printf("symbol type = proto\n");
-            break;
-
-        case strct:
-            printf("symbol type = struct\n");
-            break;
-
-        case member:
-            printf("symbol type = struct member\n");
-            break;
-
-        case enm:
-            printf("symbol type = enum\n");
-            break;
-
-        case enmm:
-            printf("symbol type = enum member\n");
-            break;
-
-        case tdef:
-            printf("symbol type = typedef\n");
-            break;
-
-    };
-    printf("line number = %ld\n", s_table->linenum);
-
-}
-#endif
-
-
 //////////////////////////////////////////////////////////////////////////////////////////
 // The read_data function is the common file parser function.
 //
@@ -88,7 +38,8 @@ void print_funcs_file_symbols_table(symbol_def_t *s_table) {
 //  print_entries - print switch determines if the parse detail are printed.
 //
 //////////////////////////////////////////////////////////////////////////////////////////
-void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream, bool print_entries)
+//void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream, bool print_entries)
+void read_data (const parse_functions_t *const parse_functions, FILE * stream, bool print_entries)
 {
     size_t bufsize = BUFSIZE;
     int line_char_count = 0;
@@ -110,7 +61,7 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream, bool pri
     }
 
     // allocate the first list element.
-    s_table_ptr = s_table_alloc();
+    s_table_ptr = parse_functions->alloc_function();
 
     if (NULL == s_table_ptr) {
         return;
@@ -152,7 +103,7 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream, bool pri
            free (line_bufptr);         
            break;
         }
-        s_table_ptr = s_table_alloc();
+        s_table_ptr = parse_functions->alloc_function();
         if (NULL == s_table_ptr) {
             break;
         }
@@ -163,9 +114,7 @@ void read_data (symbol_table_alloc_func_t s_table_alloc, FILE * stream, bool pri
 }
 
 
-bool run_parse(const symbol_table_alloc_func_t alloc_func,
-               const symbol_table_dealloc_func_t dealloc_func,
-               const char *const parse_string,
+bool run_parse(const parse_functions_t *const parse_functions,
                const char *const symbol_filename,
                const bool print_list)
 {
@@ -173,10 +122,10 @@ bool run_parse(const symbol_table_alloc_func_t alloc_func,
     char command[120];
 
     // Clear the function symbols linked list.
-    dealloc_func();
+    parse_functions->dealloc_function();
 //    printf("\n\n********%s\n", parse_string);
 
-    snprintf(command, sizeof(command), parse_string, symbol_filename);
+    snprintf(command, sizeof(command), parse_functions->command_string, symbol_filename);
 //    printf("%s\n%s/t/t%s\n", command, parse_string, symbol_filename);
 
     printf("\n");
@@ -186,7 +135,7 @@ bool run_parse(const symbol_table_alloc_func_t alloc_func,
         return false;
     }
 
-    read_data (alloc_func, output, print_list);
+    read_data (parse_functions, output, print_list);
     pclose (output);
 
     return true;
@@ -199,8 +148,6 @@ main (int argc, char **argv)
 {
   FILE *output;
   char command[120];
-  const char *vars_command_string = "grep --include=*.c -IRn %s *"; 
-  const char *funcs_command_string = "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk";
   char *filetoparse = NULL;
 //  char var_target[VAR_LEN];
 //  char filename_target[VAR_LEN];
@@ -248,7 +195,7 @@ main (int argc, char **argv)
      }
 //  write_data (output);
 
-     read_data (alloc_func, output, true);
+     read_data (&vars_parser_functions, output, true);
 
   }
   // Called as the "funcs" application.
@@ -264,9 +211,7 @@ main (int argc, char **argv)
           filetoparse = "funcs.c";
       }
 
-     run_parse(allocate_funcs_symbol_table,
-               deallocate_funcs_symbol_table,
-               funcs_command_string,
+     run_parse(&funcs_parser_functions,
                filetoparse, true); 
 
 
@@ -308,9 +253,7 @@ main (int argc, char **argv)
 //
 //
 //////////////////////////////////////////////////////////////////////////////////////
-  run_parse(allocate_vars_symbol_table,
-            deallocate_vars_symbol_table,
-            vars_command_string,
+  run_parse(&vars_parser_functions,
             var_target, false); 
 
   vars_ptr = vars_symbol_table_head;
@@ -329,9 +272,7 @@ main (int argc, char **argv)
      if ((NULL == symbol_filename) || (strcmp(symbol_filename, vars_ptr->filename) != 0)) {
         symbol_filename = vars_ptr->filename;
 
-        run_parse(allocate_funcs_symbol_table,
-                  deallocate_funcs_symbol_table,
-                  funcs_command_string,
+        run_parse(&funcs_parser_functions,
                   symbol_filename, false); 
 
         // Resestting the func_ptr head after rerunning the funcs parse with new filename
