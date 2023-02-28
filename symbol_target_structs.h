@@ -28,32 +28,14 @@ enum symbol_fields {
     linenum_idx     = 4,
     null_term_idx   = 5,
     last_plus_one_idx = 6,
+    last_plus_one = last_plus_one_idx,
     SYMBOL_LIST_LAST_PLUS_ONE = last_plus_one_idx
-};
-
-enum funcs_fields {
-    name_f_idx        = 0,
-    filename_f_idx    = 1,
-    prototype_f_idx   = 2,
-    symboltype_f_idx  = 3,
-    linenum_f_idx     = 4,
-    null_term_f_idx   = 5,
-    last_plus_one_f_idx = 6,
-    last_plus_one = last_plus_one_f_idx
-};
-
-enum vars_fields {
-    filename_v_idx    = 0,
-    linenum_v_idx     = 1,
-    prototype_v_idx   = 2,
-    null_term_v_idx   = 3,
-    last_plus_one_v_idx = 4
 };
 
 typedef struct symbol_def symbol_def_t;
 
 typedef struct line_schema {
-   enum symbol_fields symbol;
+   enum symbol_fields symbol_idx;
    char *delimiter;
    void *(*parse_function)(char *bufptr);
 }line_schema_t;
@@ -81,27 +63,25 @@ typedef struct parse_functions {
 
 
 #define BUFSIZE 256
-//struct symbol_def {
 typedef struct symbol_def {
     symbol_def_t *next;
     symbol_def_t **head;
     uint32_t index;
     char *line_bufptr;
     uint8_t line_char_count;
-//    line_schema_t line_schema[last_plus_one];
-
+// todo: use struct offsets in bytes to access symbol addresses directly.
+    // Symbol address lookup array to convert from symnol indexes in the
+    // parser_functions' line_schema to struct member addresses in the
+    // symbol_def.
+    // The array elements are initializd in the alloc_XXX_symbol_table
+    // function for the given parser type (funcs, vatrs).
     void **symbol[SYMBOL_LIST_LAST_PLUS_ONE];
     char *name;
     char *filename;
     char *prototype;
     enum symboltype sym_type;
     uint64_t linenum;
-//    print_file_symbols_function print_function;
-//    print_file_symbols_function reference_print_function;
-//    symbol_skip_function skip_function;
-//    symbol_table_dealloc_func_t dealloc_function;
 }symbol_def_t;
-//};
 
 
 

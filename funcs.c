@@ -80,7 +80,7 @@ void read_data (const parse_functions_t *const parse_functions, FILE * stream, b
         tmp_bufptr = s_table_ptr->line_bufptr;
         if (parse_functions->line_schema[0].delimiter) {
            do {
-              int symbol_idx = parse_functions->line_schema[i].symbol;
+              int symbol_idx = parse_functions->line_schema[i].symbol_idx;
               tmp_bufptr = strtok(tmp_bufptr, parse_functions->line_schema[i].delimiter); 
               *s_table_ptr->symbol[symbol_idx] = (void*)parse_functions->line_schema[i].parse_function(tmp_bufptr); 
               tmp_bufptr = NULL;

@@ -1,6 +1,6 @@
 #include "symbol_target_structs.h"
 extern symbol_def_t *vars_symbol_table_head;
-extern const char *vars_command_string;
+extern const char *const vars_command_string;
 
 extern parse_functions_t vars_parser_functions;
 
