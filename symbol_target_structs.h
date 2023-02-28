@@ -61,14 +61,17 @@ typedef struct parse_functions {
 
 
 
-
-#define BUFSIZE 256
-typedef struct symbol_def {
+typedef struct symbol_def_hdr {
     symbol_def_t *next;
     symbol_def_t **head;
     uint32_t index;
     char *line_bufptr;
     uint8_t line_char_count;
+} symbol_def_hdr_t;
+
+#define BUFSIZE 256
+typedef struct symbol_def {
+    symbol_def_hdr_t header;
 // todo: use struct offsets in bytes to access symbol addresses directly.
     // Symbol address lookup array to convert from symnol indexes in the
     // parser_functions' line_schema to struct member addresses in the

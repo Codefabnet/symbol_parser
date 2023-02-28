@@ -67,17 +67,17 @@ void read_data (const parse_functions_t *const parse_functions, FILE * stream, b
         return;
     }
 
-    s_table_ptr->line_bufptr = line_bufptr;
-    s_table_ptr->line_char_count = line_char_count;
+    s_table_ptr->header.line_bufptr = line_bufptr;
+    s_table_ptr->header.line_char_count = line_char_count;
 
     while (line_char_count != -1) {
         int i=0;
         char *tmp_bufptr;
 
-        s_table_ptr->head = parse_functions->head;
+        s_table_ptr->header.head = parse_functions->head;
 
         // Parse a ctag line from file
-        tmp_bufptr = s_table_ptr->line_bufptr;
+        tmp_bufptr = s_table_ptr->header.line_bufptr;
         if (parse_functions->line_schema[0].delimiter) {
            do {
               int symbol_idx = parse_functions->line_schema[i].symbol_idx;
@@ -109,8 +109,8 @@ void read_data (const parse_functions_t *const parse_functions, FILE * stream, b
         if (NULL == s_table_ptr) {
             break;
         }
-        s_table_ptr->line_bufptr = line_bufptr;
-        s_table_ptr->line_char_count = line_char_count;
+        s_table_ptr->header.line_bufptr = line_bufptr;
+        s_table_ptr->header.line_char_count = line_char_count;
     }
 //    s_table_ptr->dealloc_function();    
 }
@@ -297,8 +297,8 @@ main (int argc, char **argv)
         }
 
         if (funcs_ptr->linenum < vars_ptr->linenum &&
-            (NULL == funcs_ptr->next ||
-            funcs_ptr->next->linenum > vars_ptr->linenum)) {
+            (NULL == funcs_ptr->header.next ||
+            funcs_ptr->header.next->linenum > vars_ptr->linenum)) {
 
             if (func == sym_type_to_find) {
                 printf("\nCalled by:\n");
@@ -309,7 +309,7 @@ main (int argc, char **argv)
 
         }
         else {
-            funcs_ptr = funcs_ptr->next;
+            funcs_ptr = funcs_ptr->header.next;
             continue; 
         }
 
@@ -320,7 +320,7 @@ main (int argc, char **argv)
         break;
      }
 
-    vars_ptr = vars_ptr->next;
+    vars_ptr = vars_ptr->header.next;
     printf("\n\n");
     if (vars_ptr) {
        printf("%s: vars_ptr->filename: %s\n", __func__, vars_ptr->filename);

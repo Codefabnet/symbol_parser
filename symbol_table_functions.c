@@ -12,11 +12,11 @@ symbol_def_t *get_symbol_table_indexed(symbol_def_t **symbol_table_head, const u
 
        // Walk the list starting at head->next until the 
        // last element, whose next pointer is NULL
-       while ((index != ptr->index) && (NULL != ptr->next)) {
-           ptr = ptr->next;
+       while ((index != ptr->header.index) && (NULL != ptr->header.next)) {
+           ptr = ptr->header.next;
        }
 
-       if (index == ptr->index) {
+       if (index == ptr->header.index) {
            s_table = ptr;
        }
    }
@@ -38,30 +38,30 @@ uint32_t append_symbol_table( symbol_def_t *s_table_ptr) {
 
 //    s_table_ptr = malloc(sizeof(symbol_def_t));
     if (NULL != s_table_ptr) {
-        s_table_ptr->next = NULL;
+        s_table_ptr->header.next = NULL;
 
         // If first element, set head.
-        if (NULL == *s_table_ptr->head) {
-            s_table_ptr->index = 0;
-            *s_table_ptr->head = s_table_ptr;
+        if (NULL == *s_table_ptr->header.head) {
+            s_table_ptr->header.index = 0;
+            *s_table_ptr->header.head = s_table_ptr;
         }
         // else add to tail.
         else {
-            symbol_def_t *ptr = *s_table_ptr->head;
+            symbol_def_t *ptr = *s_table_ptr->header.head;
 
             // index at head->next is 1.
             index = 1;  
 
             // Walk the list starting at head->next until the 
             // last element, whose next pointer is NULL
-            while (NULL != ptr->next) {
-                ptr = ptr->next;
+            while (NULL != ptr->header.next) {
+                ptr = ptr->header.next;
                 index++;
             }
 
             // Set the index for the added element.
-            s_table_ptr->index = index;
-            ptr->next = s_table_ptr;
+            s_table_ptr->header.index = index;
+            ptr->header.next = s_table_ptr;
         }
     }
     s_table_ptr->sym_type = invalid_type;
@@ -79,11 +79,11 @@ void deallocate_symbol_table( symbol_def_t **symbol_table_head )
     while (NULL != ptr) {
 
         prev_ptr = ptr;
-        ptr = ptr->next;
+        ptr = ptr->header.next;
 
         // Deallocate the last table pointer.
-        if (NULL != prev_ptr->line_bufptr) {
-           free(prev_ptr->line_bufptr);
+        if (NULL != prev_ptr->header.line_bufptr) {
+           free(prev_ptr->header.line_bufptr);
         }
         free(prev_ptr);
     }
@@ -108,19 +108,19 @@ symbol_def_t *copy_s_table_data(symbol_def_t *s_table_in_ptr)
     memset(s_table_out_ptr, 0, sizeof(*s_table_out_ptr));
 
 
-    s_table_out_ptr->line_bufptr = malloc(s_table_in_ptr->line_char_count);
-    s_table_out_ptr->line_char_count = s_table_in_ptr->line_char_count;
-    memcpy(s_table_out_ptr->line_bufptr, s_table_in_ptr->line_bufptr, s_table_in_ptr->line_char_count);
+    s_table_out_ptr->header.line_bufptr = malloc(s_table_in_ptr->header.line_char_count);
+    s_table_out_ptr->header.line_char_count = s_table_in_ptr->header.line_char_count;
+    memcpy(s_table_out_ptr->header.line_bufptr, s_table_in_ptr->header.line_bufptr, s_table_in_ptr->header.line_char_count);
 //    strncpy(s_table_out_ptr->line_bufptr, s_table_in_ptr->line_bufptr, s_table_in_ptr->line_char_count);
 
-    s_table_out_ptr->name = (char *)s_table_out_ptr->line_bufptr + ((char *)s_table_in_ptr->name - (char *)s_table_in_ptr->line_bufptr),
+    s_table_out_ptr->name = (char *)s_table_out_ptr->header.line_bufptr + ((char *)s_table_in_ptr->name - (char *)s_table_in_ptr->header.line_bufptr),
 #if 0
 printf("%s: %p, %p, %p, %p\n", __func__, s_table_out_ptr->line_bufptr, s_table_out_ptr->name, s_table_in_ptr->line_bufptr, s_table_in_ptr->name);
 printf("%s: in - %s\n", __func__, s_table_in_ptr->name);
 printf("%s: out - %s\n", __func__, s_table_out_ptr->name);
 #endif
-    s_table_out_ptr->filename = s_table_out_ptr->line_bufptr + (s_table_in_ptr->filename - s_table_in_ptr->line_bufptr);
-    s_table_out_ptr->prototype = s_table_out_ptr->line_bufptr + ((char *)s_table_in_ptr->prototype - (char *)s_table_in_ptr->line_bufptr),
+    s_table_out_ptr->filename = s_table_out_ptr->header.line_bufptr + (s_table_in_ptr->filename - s_table_in_ptr->header.line_bufptr);
+    s_table_out_ptr->prototype = s_table_out_ptr->header.line_bufptr + ((char *)s_table_in_ptr->prototype - (char *)s_table_in_ptr->header.line_bufptr),
     s_table_out_ptr->sym_type = s_table_out_ptr->sym_type = s_table_in_ptr->sym_type;
     s_table_out_ptr->linenum = s_table_in_ptr->linenum;
 //    s_table_out_ptr->print_function = print_funcs_file_symbols_line;
