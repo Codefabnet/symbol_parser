@@ -74,13 +74,15 @@ void read_data (const parse_functions_t *const parse_functions, FILE * stream, b
         int i=0;
         char *tmp_bufptr;
 
+        s_table_ptr->head = parse_functions->head;
+
         // Parse a ctag line from file
         tmp_bufptr = s_table_ptr->line_bufptr;
         if (parse_functions->line_schema[0].delimiter) {
            do {
-
+              int symbol_idx = parse_functions->line_schema[i].symbol;
               tmp_bufptr = strtok(tmp_bufptr, parse_functions->line_schema[i].delimiter); 
-              s_table_ptr->name = (void*)parse_functions->line_schema[i].parse_function(tmp_bufptr); 
+              *s_table_ptr->symbol[symbol_idx] = (void*)parse_functions->line_schema[i].parse_function(tmp_bufptr); 
               tmp_bufptr = NULL;
            } while (parse_functions->line_schema[++i].delimiter);
         }

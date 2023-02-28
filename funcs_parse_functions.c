@@ -9,22 +9,22 @@ parse_functions_t funcs_parser_functions = {
     .head = &funcs_symbol_table_head,
     .alloc_function = allocate_funcs_symbol_table,
     .dealloc_function = deallocate_funcs_symbol_table,
-    .line_schema = {{/*.symbol = (void**)&s_table_ptr->name,*/
+    .line_schema = {{.symbol = name_idx,
                        .delimiter = "\t",
                        .parse_function = parse_default},
-                      {/*.symbol = (void**)&s_table_ptr->filename,*/
+                      {.symbol = filename_idx,
                        .delimiter = "\t",
                        .parse_function = parse_default},
-                      {/*.symbol = (void**)&s_table_ptr->prototype,*/
+                      {.symbol = prototype_idx,
                        .delimiter = "\t",
                        .parse_function = parse_proto_string},
-                      {/*.symbol = (void**)&s_table_ptr->sym_type,*/
+                      {.symbol = symboltype_idx,
                        .delimiter = "\t",
                        .parse_function = parse_funcs_symbol_type},
-                      {/*.symbol = (void**)&s_table_ptr->linenum,*/
+                      {.symbol = linenum_idx,
                        .delimiter = "\t",
                        .parse_function = parse_funcs_line_number},
-                      {/*.symbol = NULL,*/
+                      {.symbol = null_term_idx,
                        .delimiter = NULL,
                        .parse_function = NULL}},
     .print_function = print_funcs_file_symbols_line,
@@ -129,6 +129,12 @@ symbol_def_t *allocate_funcs_symbol_table() {
 
    s_table_ptr = malloc(sizeof(symbol_def_t));
 //   s_table_ptr = allocate_symbol_table(&funcs_symbol_table_head);
+   s_table_ptr->symbol[name_f_idx]        = (void**)&s_table_ptr->name;
+   s_table_ptr->symbol[filename_f_idx]    = (void**)&s_table_ptr->filename;
+   s_table_ptr->symbol[prototype_f_idx]   = (void**)&s_table_ptr->prototype;
+   s_table_ptr->symbol[symboltype_f_idx]  = (void**)&s_table_ptr->sym_type;
+   s_table_ptr->symbol[linenum_f_idx]     = (void**)&s_table_ptr->linenum;
+   s_table_ptr->symbol[null_term_f_idx]    = NULL;
 #if 0
    s_table_ptr->line_schema[name_f_idx]      = (line_schema_t) {.symbol = (void**)&s_table_ptr->name,
                                                           .delimiter = "\t",

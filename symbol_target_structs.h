@@ -20,6 +20,17 @@ enum symboltype {
 };
 
 
+enum symbol_fields {
+    name_idx        = 0,
+    filename_idx    = 1,
+    prototype_idx   = 2,
+    symboltype_idx  = 3,
+    linenum_idx     = 4,
+    null_term_idx   = 5,
+    last_plus_one_idx = 6,
+    SYMBOL_LIST_LAST_PLUS_ONE = last_plus_one_idx
+};
+
 enum funcs_fields {
     name_f_idx        = 0,
     filename_f_idx    = 1,
@@ -42,7 +53,7 @@ enum vars_fields {
 typedef struct symbol_def symbol_def_t;
 
 typedef struct line_schema {
-//   void **symbol;
+   enum symbol_fields symbol;
    char *delimiter;
    void *(*parse_function)(char *bufptr);
 }line_schema_t;
@@ -57,7 +68,7 @@ typedef struct parse_functions {
 
    const char *command_string;
    symbol_def_t **head;
-   const line_schema_t line_schema[last_plus_one];
+   line_schema_t line_schema[last_plus_one];
    const symbol_table_dealloc_func_t dealloc_function;
    const symbol_table_alloc_func_t alloc_function;
    const print_file_symbols_function print_function;
@@ -77,7 +88,9 @@ typedef struct symbol_def {
     uint32_t index;
     char *line_bufptr;
     uint8_t line_char_count;
-    line_schema_t line_schema[last_plus_one];
+//    line_schema_t line_schema[last_plus_one];
+
+    void **symbol[SYMBOL_LIST_LAST_PLUS_ONE];
     char *name;
     char *filename;
     char *prototype;
