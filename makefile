@@ -17,9 +17,13 @@ OBJECTS := $(addprefix $(OBJDIR)/, \
 $(TARGETS): $(OBJECTS)
 	gcc $(OBJECTS) -o $@ 
 
-$(OBJDIR)/%.o : %.c
+$(OBJDIR)/%.o : %.c %.h
 	gcc -g -c $< -o $@
 
+#$(OBJDIR)/funcs_parse_functions.o: symbol_target_structs.h
+$(OBJDIR)/symbol_table_functions.o: symbol_table_functions.c symbol_target_structs.h
+	gcc -g -c $< -o $@
+ 
 $(OBJECTS): | $(OBJDIR)
 
 $(OBJDIR):

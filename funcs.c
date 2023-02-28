@@ -76,20 +76,20 @@ void read_data (const parse_functions_t *const parse_functions, FILE * stream, b
 
         // Parse a ctag line from file
         tmp_bufptr = s_table_ptr->line_bufptr;
-        if (s_table_ptr->line_schema[0].delimiter) {
+        if (parse_functions->line_schema[0].delimiter) {
            do {
 
-              tmp_bufptr = strtok(tmp_bufptr, s_table_ptr->line_schema[i].delimiter); 
-              *s_table_ptr->line_schema[i].symbol = (void*)s_table_ptr->line_schema[i].parse_function(tmp_bufptr); 
+              tmp_bufptr = strtok(tmp_bufptr, parse_functions->line_schema[i].delimiter); 
+              s_table_ptr->name = (void*)parse_functions->line_schema[i].parse_function(tmp_bufptr); 
               tmp_bufptr = NULL;
-           } while (s_table_ptr->line_schema[++i].delimiter);
+           } while (parse_functions->line_schema[++i].delimiter);
         }
-        if (!s_table_ptr->skip_function(s_table_ptr)) {
+        if (!parse_functions->skip_function(s_table_ptr)) {
             append_symbol_table(s_table_ptr);
 
             if (print_entries) {
                 // Print the table of ctag elemente.
-                s_table_ptr->print_function(s_table_ptr);
+                parse_functions->print_function(s_table_ptr);
             }
         }
 
@@ -288,8 +288,8 @@ main (int argc, char **argv)
 
         if ((vars_ptr->linenum == funcs_ptr->linenum)) { // &&
             printf("\nDefined here:\n");
-            funcs_ptr->reference_print_function(funcs_ptr);
-            vars_ptr->print_function(vars_ptr);
+            funcs_parser_functions.reference_print_function(funcs_ptr);
+            vars_parser_functions.print_function(vars_ptr);
             vars_ptr->sym_type = s_table_target->sym_type;
             sym_type_to_find = s_table_target->sym_type;
         }
@@ -311,9 +311,9 @@ main (int argc, char **argv)
             continue; 
         }
 
-        funcs_ptr->reference_print_function(funcs_ptr);
+        funcs_parser_functions.reference_print_function(funcs_ptr);
         printf(" :\n");
-        vars_ptr->reference_print_function(vars_ptr);
+        vars_parser_functions.reference_print_function(vars_ptr);
         funcs_ptr = funcs_symbol_table_head;
         break;
      }

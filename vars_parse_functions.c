@@ -6,8 +6,24 @@ const char *vars_command_string = "grep --include=*.c -IRn %s *";
 
 parse_functions_t vars_parser_functions = { 
     .command_string = "grep --include=*.c -IRn %s *",
+    .head = &vars_symbol_table_head,
     .alloc_function = allocate_vars_symbol_table,
-    .dealloc_function = deallocate_vars_symbol_table
+    .dealloc_function = deallocate_vars_symbol_table,
+    .line_schema = {{/*.symbol = (void**)&s_table_ptr->name,*/
+                       .delimiter = "\t",
+                       .parse_function = parse_default},
+                      {/*.symbol = (void**)&s_table_ptr->linenum,*/
+                       .delimiter = "\t",
+                       .parse_function = parse_vars_line_number},
+                      {/*.symbol = (void**)&s_table_ptr->prototype,*/
+                       .delimiter = "\t",
+                       .parse_function = parse_proto_string},
+                      {/*.symbol = NULL,*/
+                       .delimiter = NULL,
+                       .parse_function = NULL}},
+    .print_function = print_vars_file_symbols_line,
+    .reference_print_function = print_vars_file_reference_line,
+    .skip_function = skip_vars_symbol
 };
 
 
@@ -44,6 +60,7 @@ symbol_def_t *allocate_vars_symbol_table(void)
    s_table_ptr = malloc(sizeof(symbol_def_t));
 //   s_table_ptr = allocate_symbol_table(&vars_symbol_table_head);
 
+#if 0
    s_table_ptr->line_schema[filename_v_idx]      = (line_schema_t) {.symbol = (void**)&s_table_ptr->filename,
                                                           .delimiter =  ":",
                                                           .parse_function = parse_default};
@@ -56,11 +73,14 @@ symbol_def_t *allocate_vars_symbol_table(void)
    s_table_ptr->line_schema[null_term_v_idx] = (line_schema_t) {.symbol = NULL,
                                                           .delimiter = NULL,
                                                           .parse_function = NULL};
+#endif
+#if 0
    s_table_ptr->print_function = print_vars_file_symbols_line;
    s_table_ptr->reference_print_function = print_vars_file_reference_line;
    s_table_ptr->skip_function = skip_vars_symbol;
    s_table_ptr->dealloc_function = deallocate_vars_symbol_table;
    s_table_ptr->head = &vars_symbol_table_head;
+#endif
    return s_table_ptr;
 
 }

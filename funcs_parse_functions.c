@@ -6,8 +6,30 @@ const char *funcs_command_string = "echo %s | ctags --sort=no --c-kinds=+p --fil
 
 parse_functions_t funcs_parser_functions = { 
     .command_string = "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk",
+    .head = &funcs_symbol_table_head,
     .alloc_function = allocate_funcs_symbol_table,
-    .dealloc_function = deallocate_funcs_symbol_table
+    .dealloc_function = deallocate_funcs_symbol_table,
+    .line_schema = {{/*.symbol = (void**)&s_table_ptr->name,*/
+                       .delimiter = "\t",
+                       .parse_function = parse_default},
+                      {/*.symbol = (void**)&s_table_ptr->filename,*/
+                       .delimiter = "\t",
+                       .parse_function = parse_default},
+                      {/*.symbol = (void**)&s_table_ptr->prototype,*/
+                       .delimiter = "\t",
+                       .parse_function = parse_proto_string},
+                      {/*.symbol = (void**)&s_table_ptr->sym_type,*/
+                       .delimiter = "\t",
+                       .parse_function = parse_funcs_symbol_type},
+                      {/*.symbol = (void**)&s_table_ptr->linenum,*/
+                       .delimiter = "\t",
+                       .parse_function = parse_funcs_line_number},
+                      {/*.symbol = NULL,*/
+                       .delimiter = NULL,
+                       .parse_function = NULL}},
+    .print_function = print_funcs_file_symbols_line,
+    .reference_print_function = print_funcs_file_reference_line,
+    .skip_function = skip_funcs_symbol
 };
 
 void *parse_funcs_line_number( char *bufptr )
@@ -107,7 +129,7 @@ symbol_def_t *allocate_funcs_symbol_table() {
 
    s_table_ptr = malloc(sizeof(symbol_def_t));
 //   s_table_ptr = allocate_symbol_table(&funcs_symbol_table_head);
-
+#if 0
    s_table_ptr->line_schema[name_f_idx]      = (line_schema_t) {.symbol = (void**)&s_table_ptr->name,
                                                           .delimiter = "\t",
                                                           .parse_function = parse_default};
@@ -126,12 +148,16 @@ symbol_def_t *allocate_funcs_symbol_table() {
    s_table_ptr->line_schema[null_term_f_idx] = (line_schema_t) {.symbol = NULL,
                                                           .delimiter = NULL,
                                                           .parse_function = NULL};
+#endif
+
+#if 0
    s_table_ptr->print_function = print_funcs_file_symbols_line;
    s_table_ptr->reference_print_function = print_funcs_file_reference_line;
    s_table_ptr->skip_function = skip_funcs_symbol;
    s_table_ptr->dealloc_function = deallocate_funcs_symbol_table;
    s_table_ptr->head = &funcs_symbol_table_head;
    return s_table_ptr;
+#endif
 
 }
 

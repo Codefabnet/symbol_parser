@@ -123,8 +123,8 @@ printf("%s: out - %s\n", __func__, s_table_out_ptr->name);
     s_table_out_ptr->prototype = s_table_out_ptr->line_bufptr + ((char *)s_table_in_ptr->prototype - (char *)s_table_in_ptr->line_bufptr),
     s_table_out_ptr->sym_type = s_table_out_ptr->sym_type = s_table_in_ptr->sym_type;
     s_table_out_ptr->linenum = s_table_in_ptr->linenum;
-    s_table_out_ptr->print_function = print_funcs_file_symbols_line;
-    s_table_out_ptr->reference_print_function = print_funcs_file_reference_line;
+//    s_table_out_ptr->print_function = print_funcs_file_symbols_line;
+//    s_table_out_ptr->reference_print_function = print_funcs_file_reference_line;
 
     return s_table_out_ptr;
 }

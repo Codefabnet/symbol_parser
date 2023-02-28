@@ -42,7 +42,7 @@ enum vars_fields {
 typedef struct symbol_def symbol_def_t;
 
 typedef struct line_schema {
-   void **symbol;
+//   void **symbol;
    char *delimiter;
    void *(*parse_function)(char *bufptr);
 }line_schema_t;
@@ -56,8 +56,13 @@ typedef void(*symbol_table_dealloc_func_t)(void);
 typedef struct parse_functions {
 
    const char *command_string;
-   symbol_table_dealloc_func_t dealloc_function;
-   symbol_table_alloc_func_t alloc_function;
+   symbol_def_t **head;
+   const line_schema_t line_schema[last_plus_one];
+   const symbol_table_dealloc_func_t dealloc_function;
+   const symbol_table_alloc_func_t alloc_function;
+   const print_file_symbols_function print_function;
+   const print_file_symbols_function reference_print_function;
+   const symbol_skip_function skip_function;
 
 } parse_functions_t;
 
@@ -65,10 +70,10 @@ typedef struct parse_functions {
 
 
 #define BUFSIZE 256
-struct symbol_def {
-//typedef struct symbol_def {
-    struct symbol_def *next;
-    struct symbol_def **head;
+//struct symbol_def {
+typedef struct symbol_def {
+    symbol_def_t *next;
+    symbol_def_t **head;
     uint32_t index;
     char *line_bufptr;
     uint8_t line_char_count;
@@ -78,12 +83,12 @@ struct symbol_def {
     char *prototype;
     enum symboltype sym_type;
     uint64_t linenum;
-    print_file_symbols_function print_function;
-    print_file_symbols_function reference_print_function;
-    symbol_skip_function skip_function;
-    symbol_table_dealloc_func_t dealloc_function;
-//}symbol_def_t;
-};
+//    print_file_symbols_function print_function;
+//    print_file_symbols_function reference_print_function;
+//    symbol_skip_function skip_function;
+//    symbol_table_dealloc_func_t dealloc_function;
+}symbol_def_t;
+//};
 
 
 
