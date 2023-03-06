@@ -164,6 +164,7 @@ symbol_def_t *allocate_funcs_symbol_table() {
    s_table_ptr->head = &funcs_symbol_table_head;
    return s_table_ptr;
 #endif
+   return s_table_ptr;
 
 }
 
@@ -208,6 +209,9 @@ void print_funcs_file_symbols_table(symbol_def_t *s_table) {
         case tdef:
             printf("symbol type = typedef\n");
             break;
+
+        default:
+            printf("Unknown symbol type\n");
 
     };
     printf("line number = %ld\n", s_table->linenum);

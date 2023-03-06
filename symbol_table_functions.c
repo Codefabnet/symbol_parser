@@ -138,7 +138,7 @@ printf("%s: out - %s\n", __func__, s_table_out_ptr->name);
                                  ((char *)s_table_in_ptr->prototype - (char *)s_table_in_ptr->header.line_bufptr),
 
     // symbol type and line number are simple integer copies.
-    s_table_out_ptr->sym_type = s_table_out_ptr->sym_type = s_table_in_ptr->sym_type;
+    s_table_out_ptr->sym_type = s_table_in_ptr->sym_type;
     s_table_out_ptr->linenum = s_table_in_ptr->linenum;
 
     return s_table_out_ptr;

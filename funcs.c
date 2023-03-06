@@ -151,16 +151,16 @@ main (int argc, char **argv)
   FILE *output;
   char command[120];
   char *filetoparse = NULL;
-//  char var_target[VAR_LEN];
+  char var_target[VAR_LEN];
 //  char filename_target[VAR_LEN];
-  char *var_target;
-  char *filename_target;
-  enum symboltype sym_type_target; 
-  uint64_t linenum_target;
-  print_file_symbols_function target_print_function = print_funcs_file_symbols_line;
+//  char *var_target;
+//  char *filename_target;
+//  enum symboltype sym_type_target; 
+//  uint64_t linenum_target;
+//  print_file_symbols_function target_print_function = print_funcs_file_symbols_line;
   bool find_variables = false;
-  symbol_table_alloc_func_t alloc_func;
-  symbol_table_dealloc_func_t dealloc_func;
+//  symbol_table_alloc_func_t alloc_func;
+//  symbol_table_dealloc_func_t dealloc_func;
   symbol_def_t *vars_ptr;
   symbol_def_t *funcs_ptr;
   char *symbol_filename = NULL;
@@ -184,8 +184,8 @@ main (int argc, char **argv)
       find_variables = true;
 
       // The alloc function builds a symbol table struct and populates the schema function array.
-      alloc_func = allocate_vars_symbol_table;
-      dealloc_func = deallocate_vars_symbol_table;
+//      alloc_func = allocate_vars_symbol_table;
+//      dealloc_func = deallocate_vars_symbol_table;
 
       //  -u to turn off sort, 
       snprintf(command, sizeof(command), "grep --include=*.c -IRn %s *", &var_target[0]);
@@ -227,7 +227,7 @@ main (int argc, char **argv)
 
 
      if (false == find_variables) {
-         dealloc_func();
+         funcs_parser_functions.dealloc_function();
          return EXIT_SUCCESS;
      }
 
@@ -239,15 +239,16 @@ main (int argc, char **argv)
 //     s_table_target = copy_s_table_data (get_symbol_table_indexed(&funcs_symbol_table_head, index));
 
 //     // var _target will be used in the grep command below.
-     var_target = s_table_target->name;
+//     var_target = s_table_target->name;
+     strncpy(var_target, s_table_target->name, VAR_LEN);
 
 //     // filenaame_target will be used to compare with the grep output below.
-     filename_target = s_table_target->filename;
+//     filename_target = s_table_target->filename;
 //printf("%s, %s\n", var_target, filename_target);
 
 
-     linenum_target = s_table_target->linenum;
-     sym_type_target = s_table_target->sym_type;
+//     linenum_target = s_table_target->linenum;
+//     sym_type_target = s_table_target->sym_type;
   }
 
 //////////////////////////////////////////////////////////////////////////////////////
