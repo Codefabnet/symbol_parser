@@ -9,22 +9,22 @@ parse_functions_t funcs_parser_functions = {
     .head = &funcs_symbol_table_head,
     .alloc_function = allocate_funcs_symbol_table,
     .dealloc_function = deallocate_funcs_symbol_table,
-    .line_schema = {{.symbol = name_idx,
+    .line_schema = {{.symbol_idx = name_idx,
                        .delimiter = "\t",
                        .parse_function = parse_default},
-                      {.symbol = filename_idx,
+                      {.symbol_idx = filename_idx,
                        .delimiter = "\t",
                        .parse_function = parse_default},
-                      {.symbol = prototype_idx,
+                      {.symbol_idx = prototype_idx,
                        .delimiter = "\t",
                        .parse_function = parse_proto_string},
-                      {.symbol = symboltype_idx,
+                      {.symbol_idx = symbol_type_idx,
                        .delimiter = "\t",
                        .parse_function = parse_funcs_symbol_type},
-                      {.symbol = linenum_idx,
+                      {.symbol_idx = linenum_idx,
                        .delimiter = "\t",
                        .parse_function = parse_funcs_line_number},
-                      {.symbol = null_term_idx,
+                      {.symbol_idx = null_term_idx,
                        .delimiter = NULL,
                        .parse_function = NULL}},
     .print_function = print_funcs_file_symbols_line,
@@ -106,7 +106,7 @@ void print_funcs_file_symbols_line(symbol_def_t *s_table)
 {
 //    if (s_table->sym_type == func) {
 //        printf("%d\t%s\n", s_table->linenum, s_table->name);
-        printf("%d: %s\n\t%s\n\tSource File: %s \tReference Function Line Number: %ld\n\n", s_table->index, s_table->name, s_table->prototype, s_table->filename, s_table->linenum);
+        printf("%d: %s\n\t%s\n\tSource File: %s \tReference Function Line Number: %ld\n\n", s_table->header.index, s_table->name, s_table->prototype, s_table->filename, s_table->linenum);
 //        printf("\nFile: %s\n%d: \nFunction \n%ld: %s", s_table->filename, s_table->index, s_table->linenum, s_table->prototype);
 //    }
 }
@@ -129,12 +129,12 @@ symbol_def_t *allocate_funcs_symbol_table() {
 
    s_table_ptr = malloc(sizeof(symbol_def_t));
 //   s_table_ptr = allocate_symbol_table(&funcs_symbol_table_head);
-   s_table_ptr->symbol[name_f_idx]        = (void**)&s_table_ptr->name;
-   s_table_ptr->symbol[filename_f_idx]    = (void**)&s_table_ptr->filename;
-   s_table_ptr->symbol[prototype_f_idx]   = (void**)&s_table_ptr->prototype;
-   s_table_ptr->symbol[symboltype_f_idx]  = (void**)&s_table_ptr->sym_type;
-   s_table_ptr->symbol[linenum_f_idx]     = (void**)&s_table_ptr->linenum;
-   s_table_ptr->symbol[null_term_f_idx]    = NULL;
+   s_table_ptr->symbol[name_idx]        = (void**)&s_table_ptr->name;
+   s_table_ptr->symbol[filename_idx]    = (void**)&s_table_ptr->filename;
+   s_table_ptr->symbol[prototype_idx]   = (void**)&s_table_ptr->prototype;
+   s_table_ptr->symbol[symbol_type_idx] = (void**)&s_table_ptr->sym_type;
+   s_table_ptr->symbol[linenum_idx]     = (void**)&s_table_ptr->linenum;
+   s_table_ptr->symbol[null_term_idx]   = NULL;
 #if 0
    s_table_ptr->line_schema[name_f_idx]      = (line_schema_t) {.symbol = (void**)&s_table_ptr->name,
                                                           .delimiter = "\t",

@@ -9,16 +9,16 @@ parse_functions_t vars_parser_functions = {
     .head = &vars_symbol_table_head,
     .alloc_function = allocate_vars_symbol_table,
     .dealloc_function = deallocate_vars_symbol_table,
-    .line_schema = {{.symbol = filename_idx,
+    .line_schema = {{.symbol_idx = filename_idx,
                        .delimiter = ":",
                        .parse_function = parse_default},
-                      {.symbol = linenum_idx,
+                      {.symbol_idx = linenum_idx,
                        .delimiter = ":",
                        .parse_function = parse_vars_line_number},
-                      {.symbol = prototype_idx,
+                      {.symbol_idx = prototype_idx,
                        .delimiter = "\n",
                        .parse_function = parse_proto_string},
-                      {.symbol = null_term_idx,
+                      {.symbol_idx = null_term_idx,
                        .delimiter = NULL,
                        .parse_function = NULL}},
     .print_function = print_vars_file_symbols_line,
@@ -62,9 +62,9 @@ symbol_def_t *allocate_vars_symbol_table(void)
    s_table_ptr->symbol[name_idx]        = (void**)&s_table_ptr->name;
    s_table_ptr->symbol[filename_idx]    = (void**)&s_table_ptr->filename;
    s_table_ptr->symbol[prototype_idx]   = (void**)&s_table_ptr->prototype;
-   s_table_ptr->symbol[symboltype_idx]  = (void**)&s_table_ptr->sym_type;
+   s_table_ptr->symbol[symbol_type_idx] = (void**)&s_table_ptr->sym_type;
    s_table_ptr->symbol[linenum_idx]     = (void**)&s_table_ptr->linenum;
-   s_table_ptr->symbol[null_term_idx]    = NULL;
+   s_table_ptr->symbol[null_term_idx]   = NULL;
 
 #if 0
    s_table_ptr->line_schema[filename_v_idx]      = (line_schema_t) {.symbol = (void**)&s_table_ptr->filename,

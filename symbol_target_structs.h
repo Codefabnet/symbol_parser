@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
 
 enum symboltype {
@@ -24,7 +25,7 @@ enum symbol_fields {
     name_idx        = 0,
     filename_idx    = 1,
     prototype_idx   = 2,
-    symboltype_idx  = 3,
+    symbol_type_idx = 3,
     linenum_idx     = 4,
     null_term_idx   = 5,
     last_plus_one_idx = 6,
@@ -42,7 +43,6 @@ typedef struct line_schema {
 
 typedef void (*print_file_symbols_function)(symbol_def_t *s_table);
 typedef bool (*symbol_skip_function)(symbol_def_t *s_table);
-
 typedef symbol_def_t *(*symbol_table_alloc_func_t)(void);
 typedef void(*symbol_table_dealloc_func_t)(void);
 
@@ -79,13 +79,13 @@ typedef struct symbol_def {
     // The array elements are initializd in the alloc_XXX_symbol_table
     // function for the given parser type (funcs, vatrs).
     void **symbol[SYMBOL_LIST_LAST_PLUS_ONE];
+//    size_t **symbol[SYMBOL_LIST_LAST_PLUS_ONE];
     char *name;
     char *filename;
     char *prototype;
     enum symboltype sym_type;
     uint64_t linenum;
 }symbol_def_t;
-
 
 
 symbol_def_t *get_symbol_table_indexed(symbol_def_t **symbol_table_head, const uint32_t index);

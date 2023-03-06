@@ -107,24 +107,39 @@ symbol_def_t *copy_s_table_data(symbol_def_t *s_table_in_ptr)
 
     memset(s_table_out_ptr, 0, sizeof(*s_table_out_ptr));
 
-
+    // Allocate the line buffer memory for the destination symbol struct, use the line_char_count
+    // reom the original read line when the source symbol struct was created.
     s_table_out_ptr->header.line_bufptr = malloc(s_table_in_ptr->header.line_char_count);
     s_table_out_ptr->header.line_char_count = s_table_in_ptr->header.line_char_count;
-    memcpy(s_table_out_ptr->header.line_bufptr, s_table_in_ptr->header.line_bufptr, s_table_in_ptr->header.line_char_count);
+
+    // Copy the source line buffer contents to the memory allocated for the destination line buffer.
+    memcpy(s_table_out_ptr->header.line_bufptr,
+           s_table_in_ptr->header.line_bufptr,
+           s_table_in_ptr->header.line_char_count);
+
 //    strncpy(s_table_out_ptr->line_bufptr, s_table_in_ptr->line_bufptr, s_table_in_ptr->line_char_count);
 
-    s_table_out_ptr->name = (char *)s_table_out_ptr->header.line_bufptr + ((char *)s_table_in_ptr->name - (char *)s_table_in_ptr->header.line_bufptr),
+    // Point to the position of the name portion of the line buffer in the destination symbol struct
+    // using the offset calculated from the source symbol struct, given that both line_buffers are identical.
+    s_table_out_ptr->name = (char *)s_table_out_ptr->header.line_bufptr +
+                            ((char *)s_table_in_ptr->name - (char *)s_table_in_ptr->header.line_bufptr),
+
 #if 0
 printf("%s: %p, %p, %p, %p\n", __func__, s_table_out_ptr->line_bufptr, s_table_out_ptr->name, s_table_in_ptr->line_bufptr, s_table_in_ptr->name);
 printf("%s: in - %s\n", __func__, s_table_in_ptr->name);
 printf("%s: out - %s\n", __func__, s_table_out_ptr->name);
 #endif
-    s_table_out_ptr->filename = s_table_out_ptr->header.line_bufptr + (s_table_in_ptr->filename - s_table_in_ptr->header.line_bufptr);
-    s_table_out_ptr->prototype = s_table_out_ptr->header.line_bufptr + ((char *)s_table_in_ptr->prototype - (char *)s_table_in_ptr->header.line_bufptr),
+
+    // Filename and prototype string offsets are calculated in the same way as the name offset above.
+    s_table_out_ptr->filename = s_table_out_ptr->header.line_bufptr +
+                                (s_table_in_ptr->filename - s_table_in_ptr->header.line_bufptr);
+
+    s_table_out_ptr->prototype = s_table_out_ptr->header.line_bufptr +
+                                 ((char *)s_table_in_ptr->prototype - (char *)s_table_in_ptr->header.line_bufptr),
+
+    // symbol type and line number are simple integer copies.
     s_table_out_ptr->sym_type = s_table_out_ptr->sym_type = s_table_in_ptr->sym_type;
     s_table_out_ptr->linenum = s_table_in_ptr->linenum;
-//    s_table_out_ptr->print_function = print_funcs_file_symbols_line;
-//    s_table_out_ptr->reference_print_function = print_funcs_file_reference_line;
 
     return s_table_out_ptr;
 }
