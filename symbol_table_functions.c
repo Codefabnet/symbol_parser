@@ -1,5 +1,5 @@
 #include "funcs.h"
-#include "symbol_target_structs.h"
+#include "symbol_table_functions.h"
 
 
 symbol_def_t *get_symbol_table_indexed(symbol_def_t **symbol_table_head, const uint32_t index) {
