@@ -197,7 +197,7 @@ main (int argc, char **argv)
      }
 //  write_data (output);
 
-     read_data (&vars_parser_functions, output, true);
+     read_data (&vars_parse_functions, output, true);
 
   }
   // Called as the "funcs" application.
@@ -213,7 +213,7 @@ main (int argc, char **argv)
           filetoparse = "funcs.c";
       }
 
-     run_parse(&funcs_parser_functions,
+     run_parse(&funcs_parse_functions,
                filetoparse, true); 
 
 
@@ -227,7 +227,7 @@ main (int argc, char **argv)
 
 
      if (false == find_variables) {
-         funcs_parser_functions.dealloc_function();
+         funcs_parse_functions.dealloc_function();
          return EXIT_SUCCESS;
      }
 
@@ -256,7 +256,7 @@ main (int argc, char **argv)
 //
 //
 //////////////////////////////////////////////////////////////////////////////////////
-  run_parse(&vars_parser_functions,
+  run_parse(&vars_parse_functions,
             var_target, false); 
 
   vars_ptr = vars_symbol_table_head;
@@ -275,7 +275,7 @@ main (int argc, char **argv)
      if ((NULL == symbol_filename) || (strcmp(symbol_filename, vars_ptr->filename) != 0)) {
         symbol_filename = vars_ptr->filename;
 
-        run_parse(&funcs_parser_functions,
+        run_parse(&funcs_parse_functions,
                   symbol_filename, false); 
 
         // Resestting the func_ptr head after rerunning the funcs parse with new filename
@@ -291,8 +291,8 @@ main (int argc, char **argv)
 
         if ((vars_ptr->linenum == funcs_ptr->linenum)) { // &&
             printf("\nDefined here:\n");
-            funcs_parser_functions.reference_print_function(funcs_ptr);
-            vars_parser_functions.print_function(vars_ptr);
+            funcs_parse_functions.reference_print_function(funcs_ptr);
+            vars_parse_functions.print_function(vars_ptr);
             vars_ptr->sym_type = s_table_target->sym_type;
             sym_type_to_find = s_table_target->sym_type;
         }
@@ -314,9 +314,9 @@ main (int argc, char **argv)
             continue; 
         }
 
-        funcs_parser_functions.reference_print_function(funcs_ptr);
+        funcs_parse_functions.reference_print_function(funcs_ptr);
         printf(" :\n");
-        vars_parser_functions.reference_print_function(vars_ptr);
+        vars_parse_functions.reference_print_function(vars_ptr);
         funcs_ptr = funcs_symbol_table_head;
         break;
      }

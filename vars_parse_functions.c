@@ -4,7 +4,7 @@
 symbol_def_t *vars_symbol_table_head = NULL;
 const char *const vars_command_string = "grep --include=*.c -IRn %s *"; 
 
-parse_functions_t vars_parser_functions = { 
+parse_functions_t vars_parse_functions = { 
     .command_string = vars_command_string,
     .head = &vars_symbol_table_head,
     .alloc_function = allocate_vars_symbol_table,

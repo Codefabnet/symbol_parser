@@ -4,7 +4,7 @@
 symbol_def_t *funcs_symbol_table_head = NULL;
 const char *const funcs_command_string = "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk";
 
-parse_functions_t funcs_parser_functions = { 
+parse_functions_t funcs_parse_functions = { 
     .command_string = funcs_command_string,
     .head = &funcs_symbol_table_head,
     .alloc_function = allocate_funcs_symbol_table,

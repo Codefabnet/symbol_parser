@@ -2,7 +2,7 @@
 extern symbol_def_t *funcs_symbol_table_head;
 extern const char *const funcs_command_string;
 
-extern parse_functions_t funcs_parser_functions;
+extern parse_functions_t funcs_parse_functions;
 
 void *parse_funcs_line_number( char *bufptr );
 void *parse_funcs_symbol_type( char *bufptr );
