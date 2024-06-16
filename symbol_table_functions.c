@@ -2,7 +2,8 @@
 #include "symbol_table_functions.h"
 
 
-symbol_def_t *get_symbol_table_indexed(symbol_def_t **symbol_table_head, const uint32_t index) {
+symbol_def_t *get_symbol_table_indexed(symbol_def_t **symbol_table_head, const uint32_t index)
+{
 
    symbol_def_t *s_table = NULL;
 
@@ -10,7 +11,7 @@ symbol_def_t *get_symbol_table_indexed(symbol_def_t **symbol_table_head, const u
        symbol_def_t *ptr = *symbol_table_head;
 
 
-       // Walk the list starting at head->next until the 
+       // Walk the list starting at head->next until the
        // last element, whose next pointer is NULL
        while ((index != ptr->header.index) && (NULL != ptr->header.next)) {
            ptr = ptr->header.next;
@@ -20,7 +21,7 @@ symbol_def_t *get_symbol_table_indexed(symbol_def_t **symbol_table_head, const u
            s_table = ptr;
        }
    }
-    
+
 //   printf("%s:  %s\n", __func__, s_table->name);
 
    return s_table;
@@ -31,12 +32,11 @@ symbol_def_t *get_symbol_table_indexed(symbol_def_t **symbol_table_head, const u
 
 
 //symbol_def_t *allocate_symbol_table( symbol_def_t **symbol_table_head ) {
-uint32_t append_symbol_table( symbol_def_t *s_table_ptr) {
+uint32_t append_symbol_table(symbol_def_t *s_table_ptr)
+{
 
-//    symbol_def_t *s_table_ptr = NULL;
      uint32_t index = 0;
 
-//    s_table_ptr = malloc(sizeof(symbol_def_t));
     if (NULL != s_table_ptr) {
         s_table_ptr->header.next = NULL;
 
@@ -50,9 +50,9 @@ uint32_t append_symbol_table( symbol_def_t *s_table_ptr) {
             symbol_def_t *ptr = *s_table_ptr->header.head;
 
             // index at head->next is 1.
-            index = 1;  
+            index = 1;
 
-            // Walk the list starting at head->next until the 
+            // Walk the list starting at head->next until the
             // last element, whose next pointer is NULL
             while (NULL != ptr->header.next) {
                 ptr = ptr->header.next;
@@ -64,11 +64,10 @@ uint32_t append_symbol_table( symbol_def_t *s_table_ptr) {
             ptr->header.next = s_table_ptr;
         }
     }
-    s_table_ptr->sym_type = invalid_type;
     return index;
 }
 
-void deallocate_symbol_table( symbol_def_t **symbol_table_head )
+void deallocate_symbol_table(symbol_def_t **symbol_table_head)
 {
 
     symbol_def_t *ptr = NULL;
@@ -91,14 +90,14 @@ void deallocate_symbol_table( symbol_def_t **symbol_table_head )
 }
 
 
-symbol_def_t *copy_s_table_data(symbol_def_t *s_table_in_ptr) 
+symbol_def_t *copy_s_table_data(symbol_def_t *s_table_in_ptr)
 {
     symbol_def_t *s_table_out_ptr;
 
     if (NULL == s_table_in_ptr) {
         return NULL;
     }
-   
+ 
     s_table_out_ptr = malloc(sizeof(symbol_def_t));
 
     if (NULL == s_table_out_ptr) {
@@ -107,35 +106,36 @@ symbol_def_t *copy_s_table_data(symbol_def_t *s_table_in_ptr)
 
     memset(s_table_out_ptr, 0, sizeof(*s_table_out_ptr));
 
-    // Allocate the line buffer memory for the destination symbol struct, use the line_char_count
-    // reom the original read line when the source symbol struct was created.
-    s_table_out_ptr->header.line_bufptr = malloc(s_table_in_ptr->header.line_char_count);
-    s_table_out_ptr->header.line_char_count = s_table_in_ptr->header.line_char_count;
+    // Allocate the line buffer memory for the destination symbol struct,
+    // use the line_char_count from the original read line when the source
+    // symbol struct was created.
+    s_table_out_ptr->header.line_bufptr =
+        malloc(s_table_in_ptr->header.line_char_count);
+    s_table_out_ptr->header.line_char_count =
+        s_table_in_ptr->header.line_char_count;
 
-    // Copy the source line buffer contents to the memory allocated for the destination line buffer.
+    // Copy the source line buffer contents to the memory allocated for the
+    // destination line buffer.
     memcpy(s_table_out_ptr->header.line_bufptr,
            s_table_in_ptr->header.line_bufptr,
            s_table_in_ptr->header.line_char_count);
 
-//    strncpy(s_table_out_ptr->line_bufptr, s_table_in_ptr->line_bufptr, s_table_in_ptr->line_char_count);
-
-    // Point to the position of the name portion of the line buffer in the destination symbol struct
-    // using the offset calculated from the source symbol struct, given that both line_buffers are identical.
+    // Point to the position of the name portion of the line buffer in the
+    // destination symbol struct using the offset calculated from the source
+    // symbol struct, given that both line_buffers are identical.
     s_table_out_ptr->name = (char *)s_table_out_ptr->header.line_bufptr +
-                            ((char *)s_table_in_ptr->name - (char *)s_table_in_ptr->header.line_bufptr),
+                            ((char *)s_table_in_ptr->name -
+                             (char *)s_table_in_ptr->header.line_bufptr);
 
-#if 0
-printf("%s: %p, %p, %p, %p\n", __func__, s_table_out_ptr->line_bufptr, s_table_out_ptr->name, s_table_in_ptr->line_bufptr, s_table_in_ptr->name);
-printf("%s: in - %s\n", __func__, s_table_in_ptr->name);
-printf("%s: out - %s\n", __func__, s_table_out_ptr->name);
-#endif
-
-    // Filename and prototype string offsets are calculated in the same way as the name offset above.
+    // Filename and prototype string offsets are calculated in the same way
+    // as the name offset above.
     s_table_out_ptr->filename = s_table_out_ptr->header.line_bufptr +
-                                (s_table_in_ptr->filename - s_table_in_ptr->header.line_bufptr);
+                                (s_table_in_ptr->filename -
+                                 s_table_in_ptr->header.line_bufptr);
 
     s_table_out_ptr->prototype = s_table_out_ptr->header.line_bufptr +
-                                 ((char *)s_table_in_ptr->prototype - (char *)s_table_in_ptr->header.line_bufptr),
+                                 ((char *)s_table_in_ptr->prototype -
+                                  (char *)s_table_in_ptr->header.line_bufptr),
 
     // symbol type and line number are simple integer copies.
     s_table_out_ptr->sym_type = s_table_in_ptr->sym_type;

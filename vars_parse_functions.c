@@ -34,7 +34,13 @@ void *parse_vars_line_number( char *bufptr )
 
 bool skip_vars_symbol(symbol_def_t *s_table)
 {
-    return false;
+    char *ptr = strstr(s_table->prototype, vars_parse_functions.target_name);
+    if (NULL != ptr) {
+        if (*(ptr + strlen(vars_parse_functions.target_name)) == '(')  {
+            return false;
+        }
+    }
+    return true;
 }
 
 void print_vars_file_symbols_line(symbol_def_t *s_table)
@@ -58,6 +64,7 @@ symbol_def_t *allocate_vars_symbol_table(void)
    symbol_def_t *s_table_ptr;
 
    s_table_ptr = malloc(sizeof(symbol_def_t));
+   s_table_ptr->name = vars_parse_functions.target_name;
 //   s_table_ptr = allocate_symbol_table(&vars_symbol_table_head);
    s_table_ptr->symbol[name_idx]        = (void**)&s_table_ptr->name;
    s_table_ptr->symbol[filename_idx]    = (void**)&s_table_ptr->filename;
