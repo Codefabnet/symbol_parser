@@ -36,7 +36,10 @@ bool skip_vars_symbol(symbol_def_t *s_table)
 {
     char *ptr = strstr(s_table->prototype, vars_parse_functions.target_name);
     if (NULL != ptr) {
-        if (*(ptr + strlen(vars_parse_functions.target_name)) == '(')  {
+        char *c = ptr + strlen(vars_parse_functions.target_name);
+        while (*c == ' ') c++;
+
+        if (*c == '(')  {
             return false;
         }
     }

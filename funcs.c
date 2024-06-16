@@ -220,6 +220,7 @@ int main(int argc, char **argv)
 //********************************************************************************
 // Run the grep command for the symbol selected above, in var_target
 //********************************************************************************
+  vars_parse_functions.target_name = var_target;
   run_parse(&vars_parse_functions,
             var_target, false);
 
