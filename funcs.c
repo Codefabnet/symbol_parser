@@ -112,7 +112,7 @@ bool run_parse(const parse_functions_t *const parse_functions,
 
     snprintf(command, sizeof(command),
              parse_functions->command_string,
-             symbol_filename);
+             parse_functions->target_name);
 
     printf("\n");
     output = popen(command, "r");
@@ -131,8 +131,8 @@ bool run_parse(const parse_functions_t *const parse_functions,
 #define VAR_LEN 80
 int main(int argc, char **argv)
 {
-  FILE *output;
-  char command[120];
+//  FILE *output;
+//  char command[120];
   char *filetoparse = NULL;
   char var_target[VAR_LEN];
   bool find_variables = false;
@@ -155,27 +155,13 @@ int main(int argc, char **argv)
       }
       // Default to "read_data" if no symbol name is given.
       else {
-          strncpy(var_target, "read_data", VAR_LEN);
           vars_parse_functions.target_name = "read_data";
       }
       find_variables = true;
 
-      // The alloc function builds a symbol table struct and populates
-      // the schema function array.
-
-      //  -u to turn off sort,
-      snprintf(command, sizeof(command),
-               "grep --include=*.c -IRnw %s *",
-               vars_parse_functions.target_name);
-//               &var_target[0]);
-
-     output = popen(command, "r");
-     if (!output) {
-         printf("incorrect parameters or too many files.\n");
-         return EXIT_FAILURE;
-     }
-
-     read_data(&vars_parse_functions, output, true);
+      run_parse(&vars_parse_functions,
+                vars_parse_functions.target_name,
+                true);
 
   }
   // Called as the "funcs" application.
@@ -185,10 +171,12 @@ int main(int argc, char **argv)
       // Use the filename from the command line if present.
       if (2 <= argc) {
           filetoparse = argv[1];
+          funcs_parse_functions.target_name = argv[1];
       }
       // Default to "funcs.c" if no filename is given
       else {
           filetoparse = "funcs.c";
+          funcs_parse_functions.target_name = "funcs.c";
       }
 
      run_parse(&funcs_parse_functions,
@@ -238,6 +226,7 @@ int main(int argc, char **argv)
      if ((NULL == symbol_filename) ||
          (strcmp(symbol_filename, vars_ptr->filename) != 0)) {
         symbol_filename = vars_ptr->filename;
+        funcs_parse_functions.target_name = symbol_filename;
 
         run_parse(&funcs_parse_functions,
                   symbol_filename, false);
