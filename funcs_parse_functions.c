@@ -86,7 +86,12 @@ void *parse_funcs_symbol_type( char *bufptr )
 
 bool skip_funcs_symbol(symbol_def_t *s_table)
 {
-    return ((s_table->sym_type != func) && (s_table->sym_type != var));
+//    return ((s_table->sym_type != func) && (s_table->sym_type != var));
+    return ((s_table->sym_type != func) &&
+            (s_table->sym_type != var)  &&
+            (s_table->sym_type != strct)  &&
+            (s_table->sym_type != tdef)  &&
+            (s_table->sym_type != macro));
 }
 
 void deallocate_funcs_symbol_table(void)

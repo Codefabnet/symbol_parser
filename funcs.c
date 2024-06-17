@@ -165,7 +165,7 @@ int main(int argc, char **argv)
 
       //  -u to turn off sort,
       snprintf(command, sizeof(command),
-               "grep --include=*.c -IRn %s *",
+               "grep --include=*.c -IRnw %s *",
                vars_parse_functions.target_name);
 //               &var_target[0]);
 
@@ -226,7 +226,7 @@ int main(int argc, char **argv)
 
   vars_ptr = vars_symbol_table_head;
 
-  printf("vars_ptr->filename: %s\n", vars_ptr->filename);
+//  printf("vars_ptr->filename: %s\n", vars_ptr->filename);
 
 //********************************************************************************
 // Parse the grep output

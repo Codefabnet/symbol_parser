@@ -2,7 +2,7 @@
 #include "vars_parse_functions.h"
 
 symbol_def_t *vars_symbol_table_head = NULL;
-const char *const vars_command_string = "grep --include=*.c -IRn %s *"; 
+const char *const vars_command_string = "grep --include=*.c -IRnw %s *"; 
 
 parse_functions_t vars_parse_functions = { 
     .command_string = vars_command_string,
@@ -34,6 +34,7 @@ void *parse_vars_line_number( char *bufptr )
 
 bool skip_vars_symbol(symbol_def_t *s_table)
 {
+#if 0
     char *ptr = strstr(s_table->prototype, vars_parse_functions.target_name);
     if (NULL != ptr) {
         char *c = ptr + strlen(vars_parse_functions.target_name);
@@ -44,6 +45,8 @@ bool skip_vars_symbol(symbol_def_t *s_table)
         }
     }
     return true;
+#endif
+    return false;
 }
 
 void print_vars_file_symbols_line(symbol_def_t *s_table)
