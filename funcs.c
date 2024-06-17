@@ -101,7 +101,6 @@ void read_data(const parse_functions_t *const parse_functions,
 
 
 bool run_parse(const parse_functions_t *const parse_functions,
-               const char *const symbol_filename,
                const bool print_list)
 {
     FILE *output;
@@ -131,9 +130,6 @@ bool run_parse(const parse_functions_t *const parse_functions,
 #define VAR_LEN 80
 int main(int argc, char **argv)
 {
-//  FILE *output;
-//  char command[120];
-  char *filetoparse = NULL;
   char var_target[VAR_LEN];
   bool find_variables = false;
   symbol_def_t *vars_ptr;
@@ -160,7 +156,6 @@ int main(int argc, char **argv)
       find_variables = true;
 
       run_parse(&vars_parse_functions,
-                vars_parse_functions.target_name,
                 true);
 
   }
@@ -170,17 +165,14 @@ int main(int argc, char **argv)
 
       // Use the filename from the command line if present.
       if (2 <= argc) {
-          filetoparse = argv[1];
           funcs_parse_functions.target_name = argv[1];
       }
       // Default to "funcs.c" if no filename is given
       else {
-          filetoparse = "funcs.c";
           funcs_parse_functions.target_name = "funcs.c";
       }
 
-     run_parse(&funcs_parse_functions,
-               filetoparse, true);
+     run_parse(&funcs_parse_functions, true);
 
 
      char c;
@@ -200,7 +192,7 @@ int main(int argc, char **argv)
      s_table_in_target = get_symbol_table_indexed(&funcs_symbol_table_head, index);
      s_table_target = copy_s_table_data (s_table_in_target);
 
-//   var _target will be used in the grep command below.
+     // var_target will be used in the grep command below.
      strncpy(var_target, s_table_target->name, VAR_LEN);
 
   }
@@ -209,8 +201,7 @@ int main(int argc, char **argv)
 // Run the grep command for the symbol selected above, in var_target
 //********************************************************************************
   vars_parse_functions.target_name = var_target;
-  run_parse(&vars_parse_functions,
-            var_target, false);
+  run_parse(&vars_parse_functions, false);
 
   vars_ptr = vars_symbol_table_head;
 
@@ -228,8 +219,7 @@ int main(int argc, char **argv)
         symbol_filename = vars_ptr->filename;
         funcs_parse_functions.target_name = symbol_filename;
 
-        run_parse(&funcs_parse_functions,
-                  symbol_filename, false);
+        run_parse(&funcs_parse_functions, false);
 
         // Resetting the func_ptr head after rerunning the funcs
         // parse with new filename.
