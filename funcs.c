@@ -290,12 +290,18 @@ int main(int argc, char **argv)
        int pid = fork();
        if (0 == pid) {
 
-           char command[120];
+           char linenum_cmd[8];
+           char find_cmd[48];
 
-           snprintf(command, sizeof(command),
+           snprintf(linenum_cmd, sizeof(linenum_cmd),
                     "+%ld",
                     s_table_in_target->linenum);
-           execlp("vim", "vim", "-R", s_table_in_target->filename, command, NULL);
+
+           snprintf(find_cmd, sizeof(find_cmd),
+                    "/%s",
+                    s_table_in_target->name);
+           printf("%s\n", find_cmd);
+           execlp("vim", "vim", "-R", s_table_in_target->filename, linenum_cmd, "-c", find_cmd, NULL);
        } else if (-1 != pid)
        {
            wait(NULL);

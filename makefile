@@ -16,6 +16,7 @@ OBJECTS := $(addprefix $(OBJDIR)/, \
              common_parse_functions.o \
              symbol_table_functions.o \
 	     )
+all: $(TARGETS)
 
 $(TARGETS): $(OBJECTS)
 	gcc $(OBJECTS) -o $@ 
