@@ -51,7 +51,10 @@ bool skip_vars_symbol(symbol_def_t *s_table)
 
 void print_vars_file_symbols_line(symbol_def_t *s_table)
 {
-    printf("%ld\t%s\t%s\n", s_table->linenum, s_table->filename, s_table->prototype);
+    printf("%ld\t%s\t%s\n",
+            s_table->linenum,
+            s_table->filename,
+            s_table->prototype);
 //    printf("%d\t%s\n", s_table->linenum, s_table->prototype);
 
 }

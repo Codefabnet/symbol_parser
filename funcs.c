@@ -1,5 +1,6 @@
-
-
+#include <unistd.h>
+#include <time.h>
+#include <sys/wait.h>
 #include "funcs.h"
 
 
@@ -131,7 +132,7 @@ bool run_parse(const parse_functions_t *const parse_functions,
 int main(int argc, char **argv)
 {
   char var_target[VAR_LEN];
-  bool find_variables = false;
+  // bool find_variables = false;
   symbol_def_t *vars_ptr;
   symbol_def_t *funcs_ptr;
   char *symbol_filename = NULL;
@@ -153,7 +154,7 @@ int main(int argc, char **argv)
       else {
           vars_parse_functions.target_name = "read_data";
       }
-      find_variables = true;
+//      find_variables = true;
 
       run_parse(&vars_parse_functions,
                 true);
@@ -180,14 +181,14 @@ int main(int argc, char **argv)
 
        index = (index * 10) + (uint8_t)c - 0x30;
 
-       find_variables = true;
+//       find_variables = true;
      }
 
 
-     if (false == find_variables) {
-         funcs_parse_functions.dealloc_function();
-         return EXIT_SUCCESS;
-     }
+//     if (false == find_variables) {
+//         funcs_parse_functions.dealloc_function();
+//         return EXIT_SUCCESS;
+//     }
 
      s_table_in_target = get_symbol_table_indexed(&funcs_symbol_table_head, index);
      s_table_target = copy_s_table_data (s_table_in_target);
@@ -210,73 +211,101 @@ int main(int argc, char **argv)
 //********************************************************************************
 // Parse the grep output
 //********************************************************************************
-  while (NULL != vars_ptr && vars_ptr->filename != NULL) {
+   while (NULL != vars_ptr && vars_ptr->filename != NULL) {
+ 
+       // For the first, and each unique filename in the vars linked list
+       // get the function list for the given filename.
+       if ((NULL == symbol_filename) ||
+           (strcmp(symbol_filename, vars_ptr->filename) != 0)) {
+           symbol_filename = vars_ptr->filename;
+           funcs_parse_functions.target_name = symbol_filename;
+  
+           run_parse(&funcs_parse_functions, false);
+  
+           // Resetting the func_ptr head after rerunning the funcs
+           // parse with new filename.
+           funcs_ptr = funcs_symbol_table_head;
+  
+  
+       }
+  
+       // Resetting the func_ptr head the last run funcs parse
+       funcs_ptr = funcs_symbol_table_head;
+  
+       while (NULL != funcs_ptr) {
+  
+           if ((vars_ptr->linenum == funcs_ptr->linenum)) { // &&
+               printf("\n%d) Defined here:\n", vars_ptr->header.index);
+               funcs_parse_functions.reference_print_function(funcs_ptr);
+               vars_parse_functions.print_function(vars_ptr);
+               vars_ptr->sym_type = funcs_ptr->sym_type;
+               sym_type_to_find = funcs_ptr->sym_type;
+           }
+   
+           if (funcs_ptr->linenum < vars_ptr->linenum &&
+               (NULL == funcs_ptr->header.next ||
+               funcs_ptr->header.next->linenum > vars_ptr->linenum)) {
+   
+               if (func == sym_type_to_find) {
+                   printf("\n%d) Called by:\n", vars_ptr->header.index);
+               }
+               else {
+                   printf("\n%d) Referenced here:\n", vars_ptr->header.index);
+               }
+   
+           }
+           else {
+               funcs_ptr = funcs_ptr->header.next;
+               continue;
+           }
+   
+           funcs_parse_functions.reference_print_function(funcs_ptr);
+           printf(" :\n");
+           vars_parse_functions.reference_print_function(vars_ptr);
+           funcs_ptr = funcs_symbol_table_head;
+           break;
+       }
+  
+       vars_ptr = vars_ptr->header.next;
+       printf("\n\n");
+       if (vars_ptr) {
+          printf("%s: vars_ptr->filename: %s\n", __func__, vars_ptr->filename);
+       }
+       else {
+          printf("%s: vars_ptr->filename: NULL\n", __func__);
+       }
+   }
 
-     // For the first, and each unique filename in the vars linked list
-     // get the function list for the given filename.
-     if ((NULL == symbol_filename) ||
-         (strcmp(symbol_filename, vars_ptr->filename) != 0)) {
-        symbol_filename = vars_ptr->filename;
-        funcs_parse_functions.target_name = symbol_filename;
+   char c;
+   index = 0;
+   while ('\n' != (c = getchar())) {
 
-        run_parse(&funcs_parse_functions, false);
-
-        // Resetting the func_ptr head after rerunning the funcs
-        // parse with new filename.
-        funcs_ptr = funcs_symbol_table_head;
+     index = (index * 10) + (uint8_t)c - 0x30;
+   }
+   s_table_in_target = get_symbol_table_indexed(&vars_symbol_table_head, index);
+   vars_parse_functions.reference_print_function(s_table_in_target);
 
 
-     }
+   int pid = fork();
+   if (0 == pid) {
 
-     // Resetting the func_ptr head the last run funcs parse
-     funcs_ptr = funcs_symbol_table_head;
+       char command[120];
 
-     while (NULL != funcs_ptr) {
+       snprintf(command, sizeof(command),
+                "+%ld",
+                s_table_in_target->linenum);
+       execlp("vim", "vim", s_table_in_target->filename, command, NULL);
+   } else if (-1 != pid)
+   {
+       wait(NULL);
+   }
+   printf("\n");
 
-        if ((vars_ptr->linenum == funcs_ptr->linenum)) { // &&
-            printf("\nDefined here:\n");
-            funcs_parse_functions.reference_print_function(funcs_ptr);
-            vars_parse_functions.print_function(vars_ptr);
-            vars_ptr->sym_type = funcs_ptr->sym_type;
-            sym_type_to_find = funcs_ptr->sym_type;
-        }
 
-        if (funcs_ptr->linenum < vars_ptr->linenum &&
-            (NULL == funcs_ptr->header.next ||
-            funcs_ptr->header.next->linenum > vars_ptr->linenum)) {
 
-            if (func == sym_type_to_find) {
-                printf("\nCalled by:\n");
-            }
-            else {
-                printf("\nReferenced here:\n");
-            }
-
-        }
-        else {
-            funcs_ptr = funcs_ptr->header.next;
-            continue;
-        }
-
-        funcs_parse_functions.reference_print_function(funcs_ptr);
-        printf(" :\n");
-        vars_parse_functions.reference_print_function(vars_ptr);
-        funcs_ptr = funcs_symbol_table_head;
-        break;
-     }
-
-    vars_ptr = vars_ptr->header.next;
-    printf("\n\n");
-    if (vars_ptr) {
-       printf("%s: vars_ptr->filename: %s\n", __func__, vars_ptr->filename);
-    }
-    else {
-       printf("%s: vars_ptr->filename: NULL\n", __func__);
-    }
-  }
-  if (s_table_target) {
-    deallocate_symbol_table(&s_table_target);
-  }
-  return EXIT_SUCCESS;
+   if (s_table_target) {
+      deallocate_symbol_table(&s_table_target);
+   }
+   return EXIT_SUCCESS;
 }
 

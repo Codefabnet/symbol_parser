@@ -122,7 +122,10 @@ void print_funcs_file_reference_line(symbol_def_t *s_table)
 //    if (s_table->sym_type == func) {
 //        printf("%d\t%s\n", s_table->linenum, s_table->name);
 //        printf("%d: %s\n\t%s\n\tSource File: %s \tReference Function Line Number: %ld\n\n", s_table->index, s_table->name, s_table->prototype, s_table->filename, s_table->linenum);
-        printf("%s\n%ld: %s\n", s_table->filename, s_table->linenum, s_table->prototype);
+        printf("%s\n%ld: %s\n",
+                s_table->filename,
+                s_table->linenum,
+                s_table->prototype);
 //    }
 }
 
