@@ -42,15 +42,15 @@ uint32_t append_symbol_table(symbol_def_t *s_table_ptr)
 
         // If first element, set head.
         if (NULL == *s_table_ptr->header.head) {
-            s_table_ptr->header.index = 0;
+            s_table_ptr->header.index = 1;
             *s_table_ptr->header.head = s_table_ptr;
         }
         // else add to tail.
         else {
             symbol_def_t *ptr = *s_table_ptr->header.head;
 
-            // index at head->next is 1.
-            index = 1;
+            // index at head->next is 2.
+            index = 2;
 
             // Walk the list starting at head->next until the
             // last element, whose next pointer is NULL

@@ -282,22 +282,24 @@ int main(int argc, char **argv)
 
      index = (index * 10) + (uint8_t)c - 0x30;
    }
-   s_table_in_target = get_symbol_table_indexed(&vars_symbol_table_head, index);
-   vars_parse_functions.reference_print_function(s_table_in_target);
+   if (0 < index) {
+       s_table_in_target = get_symbol_table_indexed(&vars_symbol_table_head, index);
+       vars_parse_functions.reference_print_function(s_table_in_target);
 
 
-   int pid = fork();
-   if (0 == pid) {
+       int pid = fork();
+       if (0 == pid) {
 
-       char command[120];
+           char command[120];
 
-       snprintf(command, sizeof(command),
-                "+%ld",
-                s_table_in_target->linenum);
-       execlp("vim", "vim", s_table_in_target->filename, command, NULL);
-   } else if (-1 != pid)
-   {
-       wait(NULL);
+           snprintf(command, sizeof(command),
+                    "+%ld",
+                    s_table_in_target->linenum);
+           execlp("vim", "vim", "-R", s_table_in_target->filename, command, NULL);
+       } else if (-1 != pid)
+       {
+           wait(NULL);
+       }
    }
    printf("\n");
 
