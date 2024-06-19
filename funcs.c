@@ -126,25 +126,48 @@ bool run_parse(const parse_functions_t *const parse_functions,
 
     return true;
 }
+
 void run_vim(symbol_def_t *symbol_in_target)
 {
-    char linenum_cmd[8];
-    char find_cmd[48];
+   int pid = fork();
+   if (0 == pid) {
+       char linenum_cmd[8];
+       char find_cmd[48];
 
-    snprintf(linenum_cmd, sizeof(linenum_cmd),
-             "+%ld",
-             symbol_in_target->linenum);
+       snprintf(linenum_cmd, sizeof(linenum_cmd),
+                "+%ld",
+                symbol_in_target->linenum);
 
-    snprintf(find_cmd, sizeof(find_cmd),
-             "/%s",
-             symbol_in_target->name);
+       snprintf(find_cmd, sizeof(find_cmd),
+                "/%s",
+                symbol_in_target->name);
 
-    execlp("vim", "vim", "-R",
-            symbol_in_target->filename,
-            "-c",
-            find_cmd,
-            linenum_cmd,
-            NULL);
+       execlp("vim", "vim", "-R",
+               symbol_in_target->filename,
+               "-c",
+               find_cmd,
+               linenum_cmd,
+               NULL);
+   } else if (-1 != pid)
+   {
+       wait(NULL);
+   }
+}
+
+symbol_def_t *get_symbol_selection(parse_functions_t *parse_functions)
+{
+   char c;
+   int index = 0;
+   symbol_def_t *selected = NULL;
+
+   while ('\n' != (c = getchar())) {
+
+     index = (index * 10) + (uint8_t)c - 0x30;
+   }
+   if (0 != index) {
+       selected = get_symbol_table_indexed(parse_functions->head, index);
+   }
+   return selected;
 }
 
 #define VAR_LEN 80
@@ -156,7 +179,7 @@ int main(int argc, char **argv)
   symbol_def_t *funcs_ptr;
   char *symbol_filename = NULL;
   enum symboltype sym_type_to_find = invalid_type;
-  symbol_def_t *s_table_in_target;
+//  symbol_def_t *s_table_in_target;
   bool select_symbol_from_file;
 
   // Called as the "vars" application.
@@ -181,22 +204,18 @@ int main(int argc, char **argv)
 
   if (select_symbol_from_file) {
 
+     symbol_def_t *selected; 
+
      run_parse(parse_functions, true);
 
-     uint32_t index = 0;
-     char c;
-     while ('\n' != (c = getchar())) {
+     selected = get_symbol_selection(parse_functions);
 
-       index = (index * 10) + (uint8_t)c - 0x30;
-     }
-
-     if (0 == index) {
+     if (NULL == selected) {
         funcs_parse_functions.dealloc_function();
         return EXIT_SUCCESS;
      }
 
-     vars_parse_functions.target_name = 
-         get_symbol_table_indexed(&funcs_symbol_table_head, index)->name;
+     vars_parse_functions.target_name = selected->name;
 
   }
 
@@ -278,24 +297,20 @@ int main(int argc, char **argv)
        }
    }
 
-   char c;
-   int index = 0;
-   while ('\n' != (c = getchar())) {
+   symbol_def_t *selected; 
 
-     index = (index * 10) + (uint8_t)c - 0x30;
-   }
-   if (0 < index) {
-       s_table_in_target = get_symbol_table_indexed(&vars_symbol_table_head, index);
-       vars_parse_functions.reference_print_function(s_table_in_target);
+   selected = get_symbol_selection(&vars_parse_functions);
 
-       int pid = fork();
-       if (0 == pid) {
-           run_vim(s_table_in_target);
-       } else if (-1 != pid)
-       {
-           wait(NULL);
-       }
+   if (NULL != selected) {
+
+      vars_parse_functions.reference_print_function(selected);
+
+      run_vim(selected);
    }
+
+   funcs_parse_functions.dealloc_function();
+   vars_parse_functions.dealloc_function();
+
    printf("\n");
 
    return EXIT_SUCCESS;
