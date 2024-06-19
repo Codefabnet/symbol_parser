@@ -178,7 +178,6 @@ int main(int argc, char **argv)
   symbol_def_t *vars_ptr;
   symbol_def_t *funcs_ptr;
   char *symbol_filename = NULL;
-  enum symboltype sym_type_to_find = invalid_type;
 //  symbol_def_t *s_table_in_target;
   bool select_symbol_from_file;
 
@@ -227,6 +226,7 @@ int main(int argc, char **argv)
 
   vars_ptr = vars_symbol_table_head;
 
+  enum symboltype sym_type_to_find = invalid_type;
 //  printf("vars_ptr->filename: %s\n", vars_ptr->filename);
 
 //********************************************************************************
@@ -243,11 +243,6 @@ int main(int argc, char **argv)
   
            run_parse(&funcs_parse_functions, false);
   
-           // Resetting the func_ptr head after rerunning the funcs
-           // parse with new filename.
-           funcs_ptr = funcs_symbol_table_head;
-  
-  
        }
   
        // Resetting the func_ptr head the last run funcs parse
@@ -255,7 +250,9 @@ int main(int argc, char **argv)
   
        while (NULL != funcs_ptr) {
   
-           if ((vars_ptr->linenum == funcs_ptr->linenum)) { // &&
+           // If the line number reported by ctags and grep are the
+           // same, this is where the symbol is defined.
+           if ((vars_ptr->linenum == funcs_ptr->linenum)) {
                printf("\n%d) Defined here:\n", vars_ptr->header.index);
                funcs_parse_functions.reference_print_function(funcs_ptr);
                vars_parse_functions.print_function(vars_ptr);
