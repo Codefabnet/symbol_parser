@@ -141,8 +141,9 @@ void run_vim(symbol_def_t *symbol_in_target)
 
     execlp("vim", "vim", "-R",
             symbol_in_target->filename,
+            "-c",
+            find_cmd,
             linenum_cmd,
-            "-c", find_cmd,
             NULL);
 }
 
@@ -178,10 +179,10 @@ int main(int argc, char **argv)
       return 1;
   }
 
-  run_parse(parse_functions, true);
-
-
   if (select_symbol_from_file) {
+
+     run_parse(parse_functions, true);
+
      uint32_t index = 0;
      char c;
      while ('\n' != (c = getchar())) {
