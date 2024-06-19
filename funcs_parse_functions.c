@@ -78,6 +78,9 @@ void *parse_funcs_symbol_type( char *bufptr )
             rval = tdef;
             break;
 
+        default:
+            printf("Unhandled ctag kind: %c\n", (char)*bufptr);
+
    };
 
    return (void *)rval; 
