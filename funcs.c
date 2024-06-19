@@ -126,18 +126,36 @@ bool run_parse(const parse_functions_t *const parse_functions,
 
     return true;
 }
+void run_vim(symbol_def_t *symbol_in_target)
+{
+    char linenum_cmd[8];
+    char find_cmd[48];
 
+    snprintf(linenum_cmd, sizeof(linenum_cmd),
+             "+%ld",
+             symbol_in_target->linenum);
+
+    snprintf(find_cmd, sizeof(find_cmd),
+             "/%s",
+             symbol_in_target->name);
+
+    execlp("vim", "vim", "-R",
+            symbol_in_target->filename,
+            linenum_cmd,
+            "-c", find_cmd,
+            NULL);
+}
 
 #define VAR_LEN 80
 int main(int argc, char **argv)
 {
   char var_target[VAR_LEN];
-  // bool find_variables = false;
+ bool find_variables = false;
+  parse_functions_t *parse_functions;
   symbol_def_t *vars_ptr;
   symbol_def_t *funcs_ptr;
   char *symbol_filename = NULL;
   enum symboltype sym_type_to_find = invalid_type;
-  symbol_def_t *s_table_target;
   symbol_def_t *s_table_in_target;
   uint32_t index = 0;
 
@@ -145,8 +163,9 @@ int main(int argc, char **argv)
   // Search files in the current directory for a given symbol name.
   if (strstr(argv[0], "vars") != NULL) {
 
+      parse_functions = &vars_parse_functions;
       // Use the symbol name from the command line if present.
-      if (2 >= argc) {
+      if (2 == argc) {
           strncpy(var_target, argv[1], VAR_LEN);
           vars_parse_functions.target_name = argv[1];
       }
@@ -156,7 +175,7 @@ int main(int argc, char **argv)
       }
 //      find_variables = true;
 
-      run_parse(&vars_parse_functions,
+      run_parse(parse_functions,
                 true);
 
   }
@@ -164,8 +183,9 @@ int main(int argc, char **argv)
   // Search in the given file for a list of symbols (functions).
   else {
 
+      parse_functions = &funcs_parse_functions;
       // Use the filename from the command line if present.
-      if (2 <= argc) {
+      if (2 == argc) {
           funcs_parse_functions.target_name = argv[1];
       }
       // Default to "funcs.c" if no filename is given
@@ -173,7 +193,7 @@ int main(int argc, char **argv)
           funcs_parse_functions.target_name = "funcs.c";
       }
 
-     run_parse(&funcs_parse_functions, true);
+     run_parse(parse_functions, true);
 
 
      char c;
@@ -181,20 +201,21 @@ int main(int argc, char **argv)
 
        index = (index * 10) + (uint8_t)c - 0x30;
 
-//       find_variables = true;
+       if (0 != index) {
+           find_variables = true;
+       }
      }
 
 
-//     if (false == find_variables) {
-//         funcs_parse_functions.dealloc_function();
-//         return EXIT_SUCCESS;
-//     }
+     if (false == find_variables) {
+         funcs_parse_functions.dealloc_function();
+         return EXIT_SUCCESS;
+     }
 
      s_table_in_target = get_symbol_table_indexed(&funcs_symbol_table_head, index);
-     s_table_target = copy_s_table_data (s_table_in_target);
 
      // var_target will be used in the grep command below.
-     strncpy(var_target, s_table_target->name, VAR_LEN);
+     strncpy(var_target, s_table_in_target->name, VAR_LEN);
 
   }
 
@@ -286,22 +307,9 @@ int main(int argc, char **argv)
        s_table_in_target = get_symbol_table_indexed(&vars_symbol_table_head, index);
        vars_parse_functions.reference_print_function(s_table_in_target);
 
-
        int pid = fork();
        if (0 == pid) {
-
-           char linenum_cmd[8];
-           char find_cmd[48];
-
-           snprintf(linenum_cmd, sizeof(linenum_cmd),
-                    "+%ld",
-                    s_table_in_target->linenum);
-
-           snprintf(find_cmd, sizeof(find_cmd),
-                    "/%s",
-                    s_table_in_target->name);
-           printf("%s\n", find_cmd);
-           execlp("vim", "vim", "-R", s_table_in_target->filename, linenum_cmd, "-c", find_cmd, NULL);
+           run_vim(s_table_in_target);
        } else if (-1 != pid)
        {
            wait(NULL);
@@ -309,11 +317,6 @@ int main(int argc, char **argv)
    }
    printf("\n");
 
-
-
-   if (s_table_target) {
-      deallocate_symbol_table(&s_table_target);
-   }
    return EXIT_SUCCESS;
 }
 
