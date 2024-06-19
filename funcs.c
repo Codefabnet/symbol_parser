@@ -149,80 +149,60 @@ void run_vim(symbol_def_t *symbol_in_target)
 #define VAR_LEN 80
 int main(int argc, char **argv)
 {
-  char var_target[VAR_LEN];
- bool find_variables = false;
+//  char var_target[VAR_LEN];
   parse_functions_t *parse_functions;
   symbol_def_t *vars_ptr;
   symbol_def_t *funcs_ptr;
   char *symbol_filename = NULL;
   enum symboltype sym_type_to_find = invalid_type;
   symbol_def_t *s_table_in_target;
-  uint32_t index = 0;
+  bool select_symbol_from_file;
 
   // Called as the "vars" application.
   // Search files in the current directory for a given symbol name.
   if (strstr(argv[0], "vars") != NULL) {
 
       parse_functions = &vars_parse_functions;
-      // Use the symbol name from the command line if present.
-      if (2 == argc) {
-          strncpy(var_target, argv[1], VAR_LEN);
-          vars_parse_functions.target_name = argv[1];
-      }
-      // Default to "read_data" if no symbol name is given.
-      else {
-          vars_parse_functions.target_name = "read_data";
-      }
-//      find_variables = true;
-
-      run_parse(parse_functions,
-                true);
-
-  }
-  // Called as the "funcs" application.
-  // Search in the given file for a list of symbols (functions).
-  else {
+      select_symbol_from_file = false;
+  } else {
 
       parse_functions = &funcs_parse_functions;
-      // Use the filename from the command line if present.
-      if (2 == argc) {
-          funcs_parse_functions.target_name = argv[1];
-      }
-      // Default to "funcs.c" if no filename is given
-      else {
-          funcs_parse_functions.target_name = "funcs.c";
-      }
+      select_symbol_from_file = true;
+  }
+  
+  if (2 == argc) {
+      parse_functions->target_name = argv[1];
+  }
+  else {
+      printf("No target selected\n");
+      return 1;
+  }
 
-     run_parse(parse_functions, true);
+  run_parse(parse_functions, true);
 
 
+  if (select_symbol_from_file) {
+     uint32_t index = 0;
      char c;
      while ('\n' != (c = getchar())) {
 
        index = (index * 10) + (uint8_t)c - 0x30;
-
-       if (0 != index) {
-           find_variables = true;
-       }
      }
 
-
-     if (false == find_variables) {
-         funcs_parse_functions.dealloc_function();
-         return EXIT_SUCCESS;
+     if (0 == index) {
+        funcs_parse_functions.dealloc_function();
+        return EXIT_SUCCESS;
      }
 
-     s_table_in_target = get_symbol_table_indexed(&funcs_symbol_table_head, index);
-
-     // var_target will be used in the grep command below.
-     strncpy(var_target, s_table_in_target->name, VAR_LEN);
+     vars_parse_functions.target_name = 
+         get_symbol_table_indexed(&funcs_symbol_table_head, index)->name;
 
   }
 
 //********************************************************************************
 // Run the grep command for the symbol selected above, in var_target
 //********************************************************************************
-  vars_parse_functions.target_name = var_target;
+//  vars_parse_functions.target_name = var_target;
   run_parse(&vars_parse_functions, false);
 
   vars_ptr = vars_symbol_table_head;
@@ -298,7 +278,7 @@ int main(int argc, char **argv)
    }
 
    char c;
-   index = 0;
+   int index = 0;
    while ('\n' != (c = getchar())) {
 
      index = (index * 10) + (uint8_t)c - 0x30;
