@@ -34,7 +34,7 @@ void read_data(const parse_functions_t *const parse_functions,
 
     line_bufptr = malloc(READ_BUFSIZE);
 
-    if (NULL != line_bufptr) {
+    if (NULL == line_bufptr) {
         printf("%s: out of memory\n", __FUNCTION__);
         funcs_parse_functions.dealloc_function();
         vars_parse_functions.dealloc_function();
@@ -122,7 +122,8 @@ void read_data(const parse_functions_t *const parse_functions,
         // Set up for the next line of output from the file operation.
         line_bufptr = malloc(READ_BUFSIZE);
 
-        if (NULL != line_bufptr) {
+        if (NULL == line_bufptr)
+        {
             printf("%s: out of memory\n", __FUNCTION__);
             funcs_parse_functions.dealloc_function();
             vars_parse_functions.dealloc_function();

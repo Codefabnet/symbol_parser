@@ -94,11 +94,11 @@ void *parse_funcs_symbol_type( char *bufptr )
 bool skip_funcs_symbol(symbol_def_t *s_table)
 {
 //    return ((s_table->sym_type != func) && (s_table->sym_type != var));
-    return ((s_table->sym_type != func) &&
-            (s_table->sym_type != var)  &&
-            (s_table->sym_type != strct)  &&
-            (s_table->sym_type != tdef)  &&
-            (s_table->sym_type != macro));
+    return ((s_table->sym_type != func)); // &&
+//            (s_table->sym_type != var)  &&
+//            (s_table->sym_type != strct)  &&
+//            (s_table->sym_type != tdef)  &&
+//            (s_table->sym_type != macro));
 }
 
 void deallocate_funcs_symbol_table(void)
@@ -144,7 +144,7 @@ symbol_def_t *allocate_funcs_symbol_table() {
 
    s_table_ptr = malloc(sizeof(symbol_def_t));
 
-   if (NULL != s_table_ptr) {
+   if (NULL == s_table_ptr) {
        return NULL;
    }
 //   s_table_ptr = allocate_symbol_table(&funcs_symbol_table_head);
