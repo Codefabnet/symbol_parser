@@ -1,9 +1,13 @@
 #include "funcs.h"
 #include "vars_parse_functions.h"
 
+// symbol_def_t list head pointer for vars_parse_functions struct.
 symbol_def_t *vars_symbol_table_head = NULL;
+
+// Command string to grep for all instances of a given symbol.
 const char *const vars_command_string = "grep --include=*.h --include=*.c -IRnw %s *"; 
 
+// Helper functions, data structs and schema for vars parser.
 parse_functions_t vars_parse_functions = { 
     .command_string = vars_command_string,
     .head = &vars_symbol_table_head,
@@ -27,27 +31,48 @@ parse_functions_t vars_parse_functions = {
 };
 
 
+//*****************************************************************************
+// Function: parse_vars_line_number
+//
+// Description: Convert the string at bufptr to an integer line number.
+//
+// Parameters: bufptr - Pointer to the line number of the symbol in the 
+//                      grep output.
+//
+// Return: line number
+//
+//*****************************************************************************
 void *parse_vars_line_number( char *bufptr )
 {
    return (void *)strtol(bufptr, NULL, 10);
 }
 
+//*****************************************************************************
+// Function: skip_vars_symbol
+//
+// Description: Determines if the given symbol_def_t struct should be appended
+//              to the symbols list for the parser.
+//
+// Parameters: s_table - Pointer the symbol definition to be skipped or not.
+//
+// Return: True if the append should be skipped, otherwise False.
+//
+//*****************************************************************************
 bool skip_vars_symbol(symbol_def_t *s_table)
 {
-#if 0
-    char *ptr = strstr(s_table->prototype, vars_parse_functions.target_name);
-    if (NULL != ptr) {
-        char *c = ptr + strlen(vars_parse_functions.target_name);
-        while (*c == ' ') c++;
-
-        if (*c == '(')  {
-            return false;
-        }
-    }
-    return true;
-#endif
     return false;
 }
+
+//*****************************************************************************
+// Function: print_vars_file_symbols_line
+//
+// Description: Print information about the given symbol_def_t.
+//
+// Parameters: s_table - symbol_def_t to print.
+//
+// Return: void
+//
+//*****************************************************************************
 
 void print_vars_file_symbols_line(symbol_def_t *s_table)
 {
@@ -60,13 +85,34 @@ void print_vars_file_symbols_line(symbol_def_t *s_table)
 }
 
 
+//*****************************************************************************
+// Function: deallocate_vars_symbol_table
+//
+// Description: Calls the common deallocate_symbol_table() function to free
+//              the symbol_def_t list for the vars parser.
+//
+// Parameters: void
+//
+// Return: void
+//
+//*****************************************************************************
+
 void deallocate_vars_symbol_table(void)
 {
     deallocate_symbol_table(&vars_symbol_table_head);
 }
 
 
-// The schema array and the operation functions determine the parse type, in this case a "vars" parse.
+//*****************************************************************************
+// Function: allocate_vars_symbol_table
+//
+// Description: Malloc and initialize new symbol_def_t struct.
+//
+// Parameters: void
+//
+// Return: Pointer to new symbol_def_t.
+//
+//*****************************************************************************
 symbol_def_t *allocate_vars_symbol_table(void)
 {
 
@@ -74,7 +120,6 @@ symbol_def_t *allocate_vars_symbol_table(void)
 
    s_table_ptr = malloc(sizeof(symbol_def_t));
    s_table_ptr->name = vars_parse_functions.target_name;
-//   s_table_ptr = allocate_symbol_table(&vars_symbol_table_head);
    s_table_ptr->symbol[name_idx]        = (void**)&s_table_ptr->name;
    s_table_ptr->symbol[filename_idx]    = (void**)&s_table_ptr->filename;
    s_table_ptr->symbol[prototype_idx]   = (void**)&s_table_ptr->prototype;

@@ -1,9 +1,13 @@
 #include "funcs.h"
 #include "funcs_parse_functions.h"
 
+// symbol_def_t list head pointer for funcs_parse_functions struct.
 symbol_def_t *funcs_symbol_table_head = NULL;
+
+// Command string to list all symbols (see man ctags - kinds) for a given file.
 const char *const funcs_command_string = "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk";
 
+// helper functions, data structs and schema for funcs parser.
 parse_functions_t funcs_parse_functions = { 
     .command_string = funcs_command_string,
     .head = &funcs_symbol_table_head,

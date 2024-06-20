@@ -281,61 +281,59 @@ symbol_def_t *get_symbol_selection(parse_functions_t *parse_functions)
 //*****************************************************************************
 int main(int argc, char **argv)
 {
-  parse_functions_t *parse_functions;
-  symbol_def_t *vars_ptr;
-  symbol_def_t *funcs_ptr;
-  char *symbol_filename = NULL;
-  bool select_symbol_from_file;
-
-  // Called as the "vars" application.
-  // Search files in the current directory for a given symbol name.
-  if (strstr(argv[0], "vars") != NULL) {
-
-      parse_functions = &vars_parse_functions;
-      select_symbol_from_file = false;
-  } else {
-
-      parse_functions = &funcs_parse_functions;
-      select_symbol_from_file = true;
-  }
-
-  if (2 == argc) {
-      parse_functions->target_name = argv[1];
-  }
-  else {
-      printf("No target selected\n");
-      if (select_symbol_from_file) {
-          printf("Add filename parameter for a list of symbols in that file.");
-      } else {
-          printf("Add symbol name parameter for locations where a symbol is used.");
+   parse_functions_t *parse_functions;
+   symbol_def_t *vars_ptr;
+   symbol_def_t *funcs_ptr;
+   char *symbol_filename = NULL;
+   bool select_symbol_from_file;
+   symbol_def_t *selected;
+ 
+   // Called as the "vars" application.
+   // Search files in the current directory for a given symbol name.
+   if (strstr(argv[0], "vars") != NULL) {
+ 
+       parse_functions = &vars_parse_functions;
+       select_symbol_from_file = false;
+   } else {
+ 
+       parse_functions = &funcs_parse_functions;
+       select_symbol_from_file = true;
+   }
+ 
+   if (2 == argc) {
+       parse_functions->target_name = argv[1];
+   }
+   else {
+       printf("No target selected\n");
+       if (select_symbol_from_file) {
+           printf("Add filename parameter for a list of symbols in that file.");
+       } else {
+           printf("Add symbol name parameter for locations where a symbol is used.");
+       }
+       printf("\n");
+ 
+       return 1;
+   }
+ 
+   // TODO: not sure this makes sense for anything but funcs_parse_functions.
+   if (select_symbol_from_file) {
+ 
+      run_parse(parse_functions, true);
+ 
+      // TODO: not sure this makes sense for anything but funcs_parse_functions.
+      printf("Select a symbol in %s\n", parse_functions->target_name);
+      selected = get_symbol_selection(parse_functions);
+ 
+      if (NULL == selected) {
+         funcs_parse_functions.dealloc_function();
+         return EXIT_SUCCESS;
       }
-      printf("\n");
-
-      return 1;
-  }
-
-  // TODO: not sure this makes sense for anything but funcs_parse_functions.
-  if (select_symbol_from_file) {
-
-     symbol_def_t *selected;
-
-     run_parse(parse_functions, true);
-
-     // TODO: not sure this makes sense for anything but funcs_parse_functions.
-     printf("Select a symbol in %s\n", parse_functions->target_name);
-     selected = get_symbol_selection(parse_functions);
-
-     if (NULL == selected) {
-        funcs_parse_functions.dealloc_function();
-        return EXIT_SUCCESS;
-     }
-
-     vars_parse_functions.target_name = selected->name;
-
-  }
-
-  // List locations of the symbol selected above, in vars_parse_functions.name.
-  symbol_def_t *selected;
+ 
+      vars_parse_functions.target_name = selected->name;
+ 
+   }
+ 
+   // List locations of the symbol selected above, in vars_parse_functions.name.
 
    // loop for symbols selected for edit until empty return is entered below.
    do {
