@@ -119,6 +119,11 @@ symbol_def_t *allocate_vars_symbol_table(void)
    symbol_def_t *s_table_ptr;
 
    s_table_ptr = malloc(sizeof(symbol_def_t));
+
+   if (NULL != s_table_ptr) {
+       return NULL;
+   }
+
    s_table_ptr->name = vars_parse_functions.target_name;
    s_table_ptr->symbol[name_idx]        = (void**)&s_table_ptr->name;
    s_table_ptr->symbol[filename_idx]    = (void**)&s_table_ptr->filename;

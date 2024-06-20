@@ -34,6 +34,13 @@ void read_data(const parse_functions_t *const parse_functions,
 
     line_bufptr = malloc(READ_BUFSIZE);
 
+    if (NULL != line_bufptr) {
+        printf("%s: out of memory\n", __FUNCTION__);
+        funcs_parse_functions.dealloc_function();
+        vars_parse_functions.dealloc_function();
+        exit(EXIT_FAILURE);
+    }
+
     // Get the output line to be parsed.
     line_char_count = getline(&line_bufptr, &bufsize, stream);
 
@@ -51,7 +58,10 @@ void read_data(const parse_functions_t *const parse_functions,
     s_table_ptr = parse_functions->alloc_function();
 
     if (NULL == s_table_ptr) {
-        return;
+        printf("%s: symbol_def_t alloc failed\n", __FUNCTION__);
+        funcs_parse_functions.dealloc_function();
+        vars_parse_functions.dealloc_function();
+        exit(EXIT_FAILURE);
     }
 
     // Each symbol definition list entry has a pointer to the line
@@ -111,6 +121,14 @@ void read_data(const parse_functions_t *const parse_functions,
 
         // Set up for the next line of output from the file operation.
         line_bufptr = malloc(READ_BUFSIZE);
+
+        if (NULL != line_bufptr) {
+            printf("%s: out of memory\n", __FUNCTION__);
+            funcs_parse_functions.dealloc_function();
+            vars_parse_functions.dealloc_function();
+            exit(EXIT_FAILURE);
+        }
+
         line_char_count = getline(&line_bufptr, &bufsize, stream);
 
         // TODO: handle all error cases for getline.

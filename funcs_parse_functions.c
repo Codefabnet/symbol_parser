@@ -143,6 +143,10 @@ symbol_def_t *allocate_funcs_symbol_table() {
    symbol_def_t *s_table_ptr;
 
    s_table_ptr = malloc(sizeof(symbol_def_t));
+
+   if (NULL != s_table_ptr) {
+       return NULL;
+   }
 //   s_table_ptr = allocate_symbol_table(&funcs_symbol_table_head);
    s_table_ptr->symbol[name_idx]        = (void**)&s_table_ptr->name;
    s_table_ptr->symbol[filename_idx]    = (void**)&s_table_ptr->filename;
