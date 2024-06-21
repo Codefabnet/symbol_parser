@@ -38,26 +38,26 @@ enum symbol_fields {
     SYMBOL_LIST_LAST_PLUS_ONE = last_plus_one_idx
 };
 
-typedef struct symbol_def symbol_def_t;
+struct symbol_def;
 //********************************************* 
 // struct line_schema
 //********************************************* 
 // structure defining the fields of a line
 // representing a symbol, output from ctags
 //********************************************* 
-typedef struct line_schema {
+struct line_schema {
    enum symbol_fields symbol_idx;
    // delimmiter for the given field in a line.
    char *delimiter;
    // parser function for the given field in a the line.
    void *(*parse_function)(char *bufptr);
-}line_schema_t;
+};
 
 // helper function typedefs
-typedef void (*print_file_symbols_function)(symbol_def_t *s_table);
-typedef bool (*symbol_skip_function)(symbol_def_t *s_table);
-typedef symbol_def_t *(*symbol_table_alloc_func_t)(void);
-typedef void(*symbol_table_dealloc_func_t)(void);
+typedef void (*print_file_symbols_function)(struct symbol_def *symbol);
+typedef bool (*symbol_skip_function)(struct symbol_def *symbol);
+typedef struct symbol_def *(*symbol_alloc_func_t)(void);
+typedef void(*symbol_dealloc_func_t)(void);
 
 //************************************************************ 
 // struct parse_functions
@@ -65,7 +65,7 @@ typedef void(*symbol_table_dealloc_func_t)(void);
 // Structure of parser helper functions used to parse each
 // line of source code.
 //************************************************************ 
-typedef struct parse_functions {
+struct parse_functions {
    // template string for the read file command.
    const char *command_string;
 
@@ -73,20 +73,20 @@ typedef struct parse_functions {
    char *target_name;
 
    // linked list of symbols
-   symbol_def_t **head;
+   struct symbol_def **head;
 
    // schema defines the sections of the line output from the
    // read file operation.
-   line_schema_t line_schema[last_plus_one];
+   struct line_schema line_schema[last_plus_one];
 
    // helper functions
-   const symbol_table_dealloc_func_t    dealloc_function;
-   const symbol_table_alloc_func_t      alloc_function;
+   const symbol_dealloc_func_t    dealloc_function;
+   const symbol_alloc_func_t      alloc_function;
    const print_file_symbols_function    print_function;
    const print_file_symbols_function    reference_print_function;
    const symbol_skip_function           skip_function;
 
-} parse_functions_t;
+};
 
 //******************************************* 
 // struct symbol_def_hdr
@@ -94,13 +94,13 @@ typedef struct parse_functions {
 // Linked list node struct with information
 // about the line read from a source file.
 //******************************************* 
-typedef struct symbol_def_hdr {
-    symbol_def_t *next;
-    symbol_def_t **head;
+struct symbol_def_hdr {
+    struct symbol_def *next;
+    struct symbol_def **head;
     uint32_t index;
     char *line_bufptr;
     uint8_t line_char_count;
-} symbol_def_hdr_t;
+};
 
 #define READ_BUFSIZE 256
 //******************************************************************************
@@ -110,11 +110,11 @@ typedef struct symbol_def_hdr {
 // of ctags output, including symbol location. Each line of output from ctags
 // repesents a symbol.
 //******************************************************************************
-typedef struct symbol_def {
-    symbol_def_hdr_t header;
+struct symbol_def {
+    struct symbol_def_hdr header;
 
     // Array of pointers to the symbol attribute members of symbol_def
-    // The array elements are initializd in the alloc_XXX_symbol_table
+    // The array elements are initializd in the alloc_XXX_symbol
     // function for the given parser type (funcs, vars).
     void **symbol[SYMBOL_LIST_LAST_PLUS_ONE];
 
@@ -124,11 +124,11 @@ typedef struct symbol_def {
     char *prototype;
     enum symboltype sym_type;
     uint64_t linenum;
-}symbol_def_t;
+};
 
 
-symbol_def_t *get_symbol_table_indexed(symbol_def_t **symbol_table_head, const uint32_t index);
-uint32_t append_symbol_table( symbol_def_t *s_table_ptr);
-void deallocate_symbol_table( symbol_def_t **symbol_table_head);
+struct symbol_def *get_symbol_indexed(struct symbol_def **symbol_list_head, const uint32_t index);
+uint32_t append_symbol( struct symbol_def *symbol_ptr);
+void deallocate_symbol( struct symbol_def **symbol_list_head);
 
 #endif //!defined(__SYMBOL_TARGET_STRUCTS_H__)

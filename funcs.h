@@ -6,7 +6,7 @@
 #include "common_parse_functions.h"
 
 void * parse_proto_string( char *bufptr );
-void deallocate_symbol_table( symbol_def_t **symbol_table_head );
+void deallocate_symbol( struct symbol_def **symbol_list_head );
 
 #if 0
 static inline

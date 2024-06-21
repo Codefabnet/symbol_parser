@@ -3,25 +3,25 @@
 
 
 //*****************************************************************************
-// Function: get_symbol_table_indexed
+// Function: get_symbol_indexed
 //
 // Description: finds the symbol def struct at the given index for the given
 //              linked list.
 //
-// Parameters: symbol_table_head - defines the linked list.
+// Parameters: symbol_list_head - defines the linked list.
 //
 //             index - index number for the symbol definition to return.
 //
-// Return: pointer to symbol_def_t at the given index.
+// Return: pointer to struct symbol_def at the given index.
 //
 //*****************************************************************************
-symbol_def_t *get_symbol_table_indexed(symbol_def_t **symbol_table_head, const uint32_t index)
+struct symbol_def *get_symbol_indexed(struct symbol_def **symbol_list_head, const uint32_t index)
 {
 
-   symbol_def_t *s_table = NULL;
+   struct symbol_def *symbol = NULL;
 
-   if (NULL != *symbol_table_head) {
-       symbol_def_t *ptr = *symbol_table_head;
+   if (NULL != *symbol_list_head) {
+       struct symbol_def *ptr = *symbol_list_head;
 
        // Walk the list starting at head->next until the
        // last element, whose next pointer is NULL
@@ -31,41 +31,41 @@ symbol_def_t *get_symbol_table_indexed(symbol_def_t **symbol_table_head, const u
 
        // check for the correct index.
        if (index == ptr->header.index) {
-           s_table = ptr;
+           symbol = ptr;
        }
    }
 
-   return s_table;
+   return symbol;
 }
 
 
 //*****************************************************************************
-// Function: append_symbol_table
+// Function: append_symbol
 //
-// Description: Append the given symbol_def_t to the linked list
-//              whose head is in the symbol_def_t struct.
+// Description: Append the given struct symbol_def to the linked list
+//              whose head is in the struct symbol_def struct.
 //
-// Parameters: symbol_table_ptr - the symbol_def_t to append,
+// Parameters: symbol_ptr - the struct symbol_def to append,
 //
 // Return: returns the index at which the node was appended.
 //
 //*****************************************************************************
-uint32_t append_symbol_table(symbol_def_t *s_table_ptr)
+uint32_t append_symbol(struct symbol_def *symbol_ptr)
 {
 
      uint32_t index = 0;
 
-    if (NULL != s_table_ptr) {
-        s_table_ptr->header.next = NULL;
+    if (NULL != symbol_ptr) {
+        symbol_ptr->header.next = NULL;
 
         // If first element, set head.
-        if (NULL == *s_table_ptr->header.head) {
-            s_table_ptr->header.index = 1;
-            *s_table_ptr->header.head = s_table_ptr;
+        if (NULL == *symbol_ptr->header.head) {
+            symbol_ptr->header.index = 1;
+            *symbol_ptr->header.head = symbol_ptr;
         }
         // else add to tail.
         else {
-            symbol_def_t *ptr = *s_table_ptr->header.head;
+            struct symbol_def *ptr = *symbol_ptr->header.head;
 
             // index at head->next is 2.
             index = 2;
@@ -78,30 +78,30 @@ uint32_t append_symbol_table(symbol_def_t *s_table_ptr)
             }
 
             // Set the index for the added element.
-            s_table_ptr->header.index = index;
-            ptr->header.next = s_table_ptr;
+            symbol_ptr->header.index = index;
+            ptr->header.next = symbol_ptr;
         }
     }
     return index;
 }
 
 //*****************************************************************************
-// Function: deallocate_symbol_table
+// Function: deallocate_symbol
 //
-// Description: Free the linked list of symbol_def_t structs.
+// Description: Free the linked list of struct symbol_def structs.
 //
-// Parameters: symbol_table_head - pointer to the list head.
+// Parameters: symbol_list_head - pointer to the list head.
 //
 // Return: void.
 //
 //*****************************************************************************
-void deallocate_symbol_table(symbol_def_t **symbol_table_head)
+void deallocate_symbol(struct symbol_def **symbol_list_head)
 {
 
-    symbol_def_t *ptr = NULL;
-    symbol_def_t *prev_ptr = NULL;
+    struct symbol_def *ptr = NULL;
+    struct symbol_def *prev_ptr = NULL;
 
-    ptr = *symbol_table_head;
+    ptr = *symbol_list_head;
 
     while (NULL != ptr) {
 
@@ -114,7 +114,7 @@ void deallocate_symbol_table(symbol_def_t **symbol_table_head)
         }
         free(prev_ptr);
     }
-    *symbol_table_head = NULL;
+    *symbol_list_head = NULL;
 }
 
 

@@ -1,3 +1,9 @@
 *.swp
 *.s
 *.mks
+/obj/
+/.vscode/
+funcs
+vars
+tags
+funcs.code-workspace
