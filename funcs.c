@@ -276,7 +276,7 @@ symbol_def_t *get_symbol_selection(parse_functions_t *parse_functions)
    return selected;
 }
 
-
+#define TARGET_NAME_SIZE 48
 //*****************************************************************************
 // Function: main
 //
@@ -306,6 +306,7 @@ int main(int argc, char **argv)
    char *symbol_filename = NULL;
    bool select_symbol_from_file;
    symbol_def_t *selected;
+   char target_name[TARGET_NAME_SIZE];
  
    // Called as the "vars" application.
    // Search files in the current directory for a given symbol name.
@@ -320,7 +321,8 @@ int main(int argc, char **argv)
    }
  
    if (2 == argc) {
-       parse_functions->target_name = argv[1];
+       strncpy(target_name, argv[1], TARGET_NAME_SIZE);
+       parse_functions->target_name = (char *)&target_name;
    }
    else {
        printf("No target selected\n");
@@ -348,7 +350,9 @@ int main(int argc, char **argv)
          return EXIT_SUCCESS;
       }
  
-      vars_parse_functions.target_name = selected->name;
+      strncpy(target_name, selected->name, TARGET_NAME_SIZE);
+      vars_parse_functions.target_name = (char *)&target_name;
+      funcs_parse_functions.dealloc_function();
  
    }
  

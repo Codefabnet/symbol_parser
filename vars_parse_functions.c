@@ -120,7 +120,7 @@ symbol_def_t *allocate_vars_symbol_table(void)
 
    s_table_ptr = malloc(sizeof(symbol_def_t));
 
-   if (NULL != s_table_ptr) {
+   if (NULL == s_table_ptr) {
        return NULL;
    }
 
