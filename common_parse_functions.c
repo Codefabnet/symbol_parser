@@ -10,6 +10,16 @@ void * parse_default( char *bufptr )
 
 void * parse_proto_string( char *bufptr )
 {
+
+    while (' ' == *bufptr) {
+        bufptr++;
+    }
+    return (void *)bufptr;
+}
+
+#if 0
+void * parse_proto_string( char *bufptr )
+{
     char *ds_ptr = NULL;
 
     if ((NULL != (ds_ptr = strchr(bufptr, ';')))) {
@@ -27,4 +37,4 @@ void * parse_proto_string( char *bufptr )
 
     return (void *)bufptr;
 }
-
+#endif

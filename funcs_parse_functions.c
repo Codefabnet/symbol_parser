@@ -5,7 +5,7 @@
 symbol_def_t *funcs_symbol_table_head = NULL;
 
 // Command string to list all symbols (see man ctags - kinds) for a given file.
-const char *const funcs_command_string = "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk";
+const char *const funcs_command_string = "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk -x";
 
 // helper functions, data structs and schema for funcs parser.
 parse_functions_t funcs_parse_functions = { 
@@ -14,20 +14,20 @@ parse_functions_t funcs_parse_functions = {
     .alloc_function = allocate_funcs_symbol_table,
     .dealloc_function = deallocate_funcs_symbol_table,
     .line_schema = {{.symbol_idx = name_idx,
-                       .delimiter = "\t",
+                       .delimiter = " ",
                        .parse_function = parse_default},
-                      {.symbol_idx = filename_idx,
-                       .delimiter = "\t",
-                       .parse_function = parse_default},
-                      {.symbol_idx = prototype_idx,
-                       .delimiter = "\t",
-                       .parse_function = parse_proto_string},
                       {.symbol_idx = symbol_type_idx,
-                       .delimiter = "\t",
+                       .delimiter = " ",
                        .parse_function = parse_funcs_symbol_type},
                       {.symbol_idx = linenum_idx,
-                       .delimiter = "\t",
+                       .delimiter = " ",
                        .parse_function = parse_funcs_line_number},
+                      {.symbol_idx = filename_idx,
+                       .delimiter = " ",
+                       .parse_function = parse_default},
+                      {.symbol_idx = prototype_idx,
+                       .delimiter = "\n",
+                       .parse_function = parse_proto_string},
                       {.symbol_idx = null_term_idx,
                        .delimiter = NULL,
                        .parse_function = NULL}},
@@ -38,7 +38,8 @@ parse_functions_t funcs_parse_functions = {
 
 void *parse_funcs_line_number( char *bufptr )
 {
-   return (void *)strtol(strchr(bufptr, ':')+1, NULL, 10);
+//   return (void *)strtol(strchr(bufptr, ':')+1, NULL, 10);
+   return (void *)strtol(bufptr, NULL, 10);
 }
 
 void *parse_funcs_symbol_type( char *bufptr )
@@ -118,7 +119,18 @@ void print_funcs_file_symbols_line(symbol_def_t *s_table)
 {
 //    if (s_table->sym_type == func) {
 //        printf("%d\t%s\n", s_table->linenum, s_table->name);
-        printf("%d: %s\n\t%s\n\tSource File: %s \tReference Function Line Number: %ld\n\n", s_table->header.index, s_table->name, s_table->prototype, s_table->filename, s_table->linenum);
+//        printf("%d: %s\n\t%s\n\tfilename: %s \tlinenum: %ld\n\n",
+//                s_table->header.index,
+//                s_table->name,
+//                s_table->prototype,
+//                s_table->filename,
+//                s_table->linenum);
+        printf("%d: %s\t%s:%ld\n\t%s\n\n",
+                s_table->header.index,
+                s_table->name,
+                s_table->filename,
+                s_table->linenum,
+                s_table->prototype);
 //        printf("\nFile: %s\n%d: \nFunction \n%ld: %s", s_table->filename, s_table->index, s_table->linenum, s_table->prototype);
 //    }
 }

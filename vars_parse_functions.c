@@ -60,6 +60,17 @@ void *parse_vars_line_number( char *bufptr )
 //*****************************************************************************
 bool skip_vars_symbol(symbol_def_t *s_table)
 {
+    // TODO: Run "gcc -E -fpreprocessed" on the file and look for prototype
+    // in the output to skip in comment and conditional compile blocks.
+
+    // Skip if the symbol is part of a single line comment.
+    const char *comment_str = "//";
+    char *comment_ptr = NULL;
+
+    comment_ptr = strstr(s_table->prototype, comment_str);
+    if (comment_ptr && comment_ptr < strstr(s_table->prototype, s_table->name)) {
+        return true;
+    }
     return false;
 }
 
