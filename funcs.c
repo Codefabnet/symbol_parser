@@ -25,7 +25,7 @@
 //
 //*********************************************************************************
 void read_data(const struct parse_functions *const parse_functions,
-                FILE * stream, bool print_entries)
+                FILE * stream, const bool print_entries)
 {
     size_t bufsize = READ_BUFSIZE;
     int line_char_count = 0;
@@ -130,6 +130,8 @@ void read_data(const struct parse_functions *const parse_functions,
             exit(EXIT_FAILURE);
         }
 
+        bufsize = READ_BUFSIZE;
+
         line_char_count = getline(&line_bufptr, &bufsize, stream);
 
         // TODO: handle all error cases for getline.
@@ -232,7 +234,7 @@ void run_vim(struct symbol_def *symbol_in_target)
                 symbol_in_target->name);
 
        // Run the vim command in the new process.
-       execlp("vim", "vim", "-R",
+       execlp("gvim", "gvim", "-R",
                symbol_in_target->filename,
                "-c",
                find_cmd,

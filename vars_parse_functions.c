@@ -139,7 +139,7 @@ struct symbol_def *allocate_vars_symbol(void)
    symbol_ptr->symbol[name_idx]        = (void**)&symbol_ptr->name;
    symbol_ptr->symbol[filename_idx]    = (void**)&symbol_ptr->filename;
    symbol_ptr->symbol[prototype_idx]   = (void**)&symbol_ptr->prototype;
-   symbol_ptr->symbol[symbol_type_idx] = (void**)&symbol_ptr->sym_type;
+   symbol_ptr->symbol[symbol_enum_idx] = (void**)&symbol_ptr->sym_type;
    symbol_ptr->symbol[linenum_idx]     = (void**)&symbol_ptr->linenum;
    symbol_ptr->symbol[null_term_idx]   = NULL;
 

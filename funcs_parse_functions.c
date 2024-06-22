@@ -16,9 +16,9 @@ struct parse_functions funcs_parse_functions = {
     .line_schema = {{.symbol_idx = name_idx,
                        .delimiter = " ",
                        .parse_function = parse_default},
-                      {.symbol_idx = symbol_type_idx,
+                      {.symbol_idx = symboltype_idx,
                        .delimiter = " ",
-                       .parse_function = parse_funcs_symbol_type},
+                       .parse_function = parse_default},
                       {.symbol_idx = linenum_idx,
                        .delimiter = " ",
                        .parse_function = parse_funcs_line_number},
@@ -94,10 +94,12 @@ void *parse_funcs_symbol_type( char *bufptr )
 
 bool skip_funcs_symbol(struct symbol_def *symbol)
 {
+    symbol->sym_type = (enum symboltype)parse_funcs_symbol_type(symbol->symboltype); 
 //    return ((symbol->sym_type != func) && (symbol->sym_type != var));
-    return ((symbol->sym_type != func)); // &&
-//            (symbol->sym_type != var)  &&
-//            (symbol->sym_type != strct)  &&
+    return ((symbol->sym_type != func) &&
+            (symbol->sym_type != var)  &&
+            (symbol->sym_type != proto)  &&
+            (symbol->sym_type != strct)); //  &&
 //            (symbol->sym_type != tdef)  &&
 //            (symbol->sym_type != macro));
 }
@@ -125,11 +127,12 @@ void print_funcs_file_symbols_line(struct symbol_def *symbol)
 //                symbol->prototype,
 //                symbol->filename,
 //                symbol->linenum);
-        printf("%d: %s\t%s:%ld\n\t%s\n\n",
+        printf("%d: %s - %s(%ld)\n\t%s\t%s\n\n",
                 symbol->header.index,
                 symbol->name,
                 symbol->filename,
                 symbol->linenum,
+                symbol->symboltype,
                 symbol->prototype);
 //        printf("\nFile: %s\n%d: \nFunction \n%ld: %s", symbol->filename, symbol->index, symbol->linenum, symbol->prototype);
 //    }
@@ -163,7 +166,8 @@ struct symbol_def *allocate_funcs_symbol() {
    symbol_ptr->symbol[name_idx]        = (void**)&symbol_ptr->name;
    symbol_ptr->symbol[filename_idx]    = (void**)&symbol_ptr->filename;
    symbol_ptr->symbol[prototype_idx]   = (void**)&symbol_ptr->prototype;
-   symbol_ptr->symbol[symbol_type_idx] = (void**)&symbol_ptr->sym_type;
+   symbol_ptr->symbol[symboltype_idx]  = (void**)&symbol_ptr->symboltype;
+   symbol_ptr->symbol[symbol_enum_idx] = (void**)&symbol_ptr->sym_type;
    symbol_ptr->symbol[linenum_idx]     = (void**)&symbol_ptr->linenum;
    symbol_ptr->symbol[null_term_idx]   = NULL;
 #if 0

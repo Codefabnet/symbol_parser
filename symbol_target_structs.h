@@ -30,10 +30,11 @@ enum symbol_fields {
     name_idx        = 0,
     filename_idx    = 1,
     prototype_idx   = 2,
-    symbol_type_idx = 3,
-    linenum_idx     = 4,
-    null_term_idx   = 5,
-    last_plus_one_idx = 6,
+    symboltype_idx  = 3,
+    symbol_enum_idx = 4,
+    linenum_idx     = 5,
+    null_term_idx   = 6,
+    last_plus_one_idx = 7,
     last_plus_one = last_plus_one_idx,
     SYMBOL_LIST_LAST_PLUS_ONE = last_plus_one_idx
 };
@@ -102,7 +103,7 @@ struct symbol_def_hdr {
     uint8_t line_char_count;
 };
 
-#define READ_BUFSIZE 256
+#define READ_BUFSIZE 124
 //******************************************************************************
 // struct symbol_def
 //******************************************************************************
@@ -122,6 +123,7 @@ struct symbol_def {
     char *name;
     char *filename;
     char *prototype;
+    char *symboltype;
     enum symboltype sym_type;
     uint64_t linenum;
 };
