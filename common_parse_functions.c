@@ -1,7 +1,60 @@
 #include "funcs.h"
-#include "common_parse_functions.h"
 
+//*****************************************************************************
+// Function: set_target_name
+//
+// Description: #include "common_parse_functions.h"
+//
+// Parameters: 
+//
+// Return: 
+//
+//*****************************************************************************
+void set_target_name(struct parse_functions *const parser_functions,
+                     const char *const target_name, const int name_length)
+{
+    char *new_name = NULL;
 
+    new_name = malloc(name_length);
+    if (NULL != new_name) {
+        strncpy(new_name, target_name, name_length);
+    }
+    parser_functions->target_name = new_name;
+}
+
+//*****************************************************************************
+// Function: free_target_name
+//
+// Description: }
+//
+// Parameters: 
+//
+// Return: 
+//
+//*****************************************************************************
+void free_target_name(struct parse_functions *const parser_functions)
+{
+    if (NULL != parser_functions->target_name) {
+        free(parser_functions->target_name);
+    }
+    parser_functions->target_name = NULL;
+}
+
+//*****************************************************************************
+// Function: deallocate_parser
+//
+// Description: }
+//
+// Parameters: 
+//
+// Return: 
+//
+//*****************************************************************************
+void deallocate_parser(struct parse_functions *const parser_functions)
+{
+    free_target_name(parser_functions);
+    deallocate_symbol_list(parser_functions->head);
+}
 
 void * parse_default( char *bufptr )
 {

@@ -54,11 +54,12 @@ struct line_schema {
    void *(*parse_function)(char *bufptr);
 };
 
+struct parse_functions;
 // helper function typedefs
 typedef void (*print_file_symbols_function)(struct symbol_def *symbol);
 typedef bool (*symbol_skip_function)(struct symbol_def *symbol);
 typedef struct symbol_def *(*symbol_alloc_func_t)(void);
-typedef void(*symbol_dealloc_func_t)(void);
+typedef void(*symbol_dealloc_func_t)(struct parse_functions);
 
 //************************************************************ 
 // struct parse_functions
@@ -126,11 +127,12 @@ struct symbol_def {
     char *symboltype;
     enum symboltype sym_type;
     uint64_t linenum;
+    struct symbol_def *link_index;
 };
 
 
 struct symbol_def *get_symbol_indexed(struct symbol_def **symbol_list_head, const uint32_t index);
 uint32_t append_symbol( struct symbol_def *symbol_ptr);
-void deallocate_symbol( struct symbol_def **symbol_list_head);
+void deallocate_symbol_list( struct symbol_def **symbol_list_head);
 
 #endif //!defined(__SYMBOL_TARGET_STRUCTS_H__)

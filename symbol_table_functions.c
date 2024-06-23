@@ -2,6 +2,7 @@
 #include "symbol_table_functions.h"
 
 
+
 //*****************************************************************************
 // Function: get_symbol_indexed
 //
@@ -86,7 +87,7 @@ uint32_t append_symbol(struct symbol_def *symbol_ptr)
 }
 
 //*****************************************************************************
-// Function: deallocate_symbol
+// Function: deallocate_symbol_list
 //
 // Description: Free the linked list of struct symbol_def structs.
 //
@@ -95,24 +96,24 @@ uint32_t append_symbol(struct symbol_def *symbol_ptr)
 // Return: void.
 //
 //*****************************************************************************
-void deallocate_symbol(struct symbol_def **symbol_list_head)
+void deallocate_symbol_list(struct symbol_def **symbol_list_head)
 {
 
     struct symbol_def *ptr = NULL;
-    struct symbol_def *prev_ptr = NULL;
+    struct symbol_def *next_ptr = NULL;
 
     ptr = *symbol_list_head;
 
     while (NULL != ptr) {
 
-        prev_ptr = ptr;
-        ptr = ptr->header.next;
+        next_ptr = ptr->header.next;
 
         // Deallocate the last table pointer.
-        if (NULL != prev_ptr->header.line_bufptr) {
-           free(prev_ptr->header.line_bufptr);
+        if (NULL != ptr->header.line_bufptr) {
+           free(ptr->header.line_bufptr);
         }
-        free(prev_ptr);
+        free(ptr);
+        ptr = next_ptr;
     }
     *symbol_list_head = NULL;
 }

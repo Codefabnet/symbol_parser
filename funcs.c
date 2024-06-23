@@ -36,8 +36,8 @@ void read_data(const struct parse_functions *const parse_functions,
 
     if (NULL == line_bufptr) {
         printf("%s: out of memory\n", __FUNCTION__);
-        funcs_parse_functions.dealloc_function();
-        vars_parse_functions.dealloc_function();
+        deallocate_parser(&funcs_parse_functions);
+        deallocate_parser(&vars_parse_functions);
         exit(EXIT_FAILURE);
     }
 
@@ -59,8 +59,8 @@ void read_data(const struct parse_functions *const parse_functions,
 
     if (NULL == symbol_ptr) {
         printf("%s: symbol_def alloc failed\n", __FUNCTION__);
-        funcs_parse_functions.dealloc_function();
-        vars_parse_functions.dealloc_function();
+        deallocate_parser(&funcs_parse_functions);
+        deallocate_parser(&vars_parse_functions);
         exit(EXIT_FAILURE);
     }
 
@@ -125,8 +125,8 @@ void read_data(const struct parse_functions *const parse_functions,
         if (NULL == line_bufptr)
         {
             printf("%s: out of memory\n", __FUNCTION__);
-            funcs_parse_functions.dealloc_function();
-            vars_parse_functions.dealloc_function();
+            deallocate_parser(&funcs_parse_functions);
+            deallocate_parser(&vars_parse_functions);
             exit(EXIT_FAILURE);
         }
 
@@ -173,7 +173,7 @@ bool run_parse(const struct parse_functions *const parse_functions,
     char command[120];
 
     // Clear the function symbols linked list.
-    parse_functions->dealloc_function();
+    deallocate_symbol_list(parse_functions->head);
 
     // build the file operation command from the command string in the parse
     // functions struct.
@@ -275,7 +275,105 @@ struct symbol_def *get_symbol_selection(struct parse_functions *parse_functions)
    if (0 != index) {
        selected = get_symbol_indexed(parse_functions->head, index);
    }
+   // If the first char is 'U' push the symbol at the index and use the name 
+   // member as the target_name for the new parse. 
+
+//   strncpy(target_name, selected->name, TARGET_NAME_SIZE);
+//   find_symbol():
    return selected;
+}
+
+void find_symbols()
+{
+    struct symbol_def *vars_ptr;
+    struct symbol_def *funcs_ptr;
+    char *symbol_filename = NULL;
+
+    // Get the symbol list.
+    run_parse(&vars_parse_functions, false);
+
+    // Get first list entry
+    vars_ptr = vars_symbol_list_head;
+
+    enum symboltype sym_type_to_find = invalid_type;
+
+    // Walk the list of locations for the given symbol.
+    while (NULL != vars_ptr && vars_ptr->filename != NULL) {
+
+        // For the first, and each unique filename in the vars linked list
+        // get the list of symbols for the filename in current list entry.
+        if ((NULL == symbol_filename) ||
+            (strcmp(symbol_filename, vars_ptr->filename) != 0)) {
+            symbol_filename = vars_ptr->filename;
+
+            // Set the file to parse.
+            set_target_name(&funcs_parse_functions, symbol_filename, strlen(symbol_filename) + 1);
+
+            // Get all symbols for the given file.
+            run_parse(&funcs_parse_functions, false);
+        }
+
+        // Get the first list entry for the symbols in the given file.
+        funcs_ptr = funcs_symbol_list_head;
+
+        // For all symbols in current file look for the given symbol.
+        while (NULL != funcs_ptr) {
+
+            // If the line number reported by ctags and grep are the
+            // same, this is where the symbol is defined.
+            if ((vars_ptr->linenum == funcs_ptr->linenum)) {
+                printf("\n%d) Defined here:\n", vars_ptr->header.index);
+                funcs_parse_functions.reference_print_function(funcs_ptr);
+                vars_parse_functions.print_function(vars_ptr);
+                vars_ptr->sym_type = funcs_ptr->sym_type;
+                sym_type_to_find = funcs_ptr->sym_type;
+            }
+
+            // Check for the given symbol between entries in the funcs list.
+            if (funcs_ptr->linenum < vars_ptr->linenum &&
+                (NULL == funcs_ptr->header.next ||
+                funcs_ptr->header.next->linenum > vars_ptr->linenum)) {
+
+                // if the funcs list entry is a function, assume calling the
+                // given symbol.
+                if (func == sym_type_to_find) {
+                    printf("\n%d) Called by:\n", vars_ptr->header.index);
+                }
+                // Otherwise a "reference."
+                else {
+                    printf("\n%d) Referenced here:\n", vars_ptr->header.index);
+                }
+
+            }
+            // The given symbol is not in the range for the current funcs entry.
+            else {
+                funcs_ptr = funcs_ptr->header.next;
+                continue;
+            }
+
+            vars_ptr->link_index = funcs_ptr;
+
+            funcs_parse_functions.print_function(funcs_ptr);
+            funcs_parse_functions.reference_print_function(funcs_ptr);
+            printf(" :\n");
+            vars_parse_functions.reference_print_function(vars_ptr);
+
+            // Go back to the first entry in the funcs list, break for the next
+            // location for the given symbol.
+            funcs_ptr = funcs_symbol_list_head;
+            break;
+        }
+
+        // Get the list entry for the next location of the given symbol.
+        vars_ptr = vars_ptr->header.next;
+        printf("\n\n");
+        if (vars_ptr) {
+           printf("%s: vars_ptr->filename: %s\n", __func__, vars_ptr->filename);
+        }
+        else {
+           printf("%s: vars_ptr->filename: NULL\n", __func__);
+        }
+    }
 }
 
 #define TARGET_NAME_SIZE 48
@@ -303,12 +401,8 @@ struct symbol_def *get_symbol_selection(struct parse_functions *parse_functions)
 int main(int argc, char **argv)
 {
    struct parse_functions *parse_functions;
-   struct symbol_def *vars_ptr;
-   struct symbol_def *funcs_ptr;
-   char *symbol_filename = NULL;
    bool select_symbol_from_file;
    struct symbol_def *selected;
-   char target_name[TARGET_NAME_SIZE];
  
    // Called as the "vars" application.
    // Search files in the current directory for a given symbol name.
@@ -323,8 +417,7 @@ int main(int argc, char **argv)
    }
  
    if (2 == argc) {
-       strncpy(target_name, argv[1], TARGET_NAME_SIZE);
-       parse_functions->target_name = (char *)&target_name;
+       set_target_name(parse_functions, argv[1], strlen(argv[1]) + 1);
    }
    else {
        printf("No target selected\n");
@@ -348,13 +441,12 @@ int main(int argc, char **argv)
       selected = get_symbol_selection(parse_functions);
  
       if (NULL == selected) {
-         funcs_parse_functions.dealloc_function();
+         deallocate_parser(&funcs_parse_functions);
          return EXIT_SUCCESS;
       }
  
-      strncpy(target_name, selected->name, TARGET_NAME_SIZE);
-      vars_parse_functions.target_name = (char *)&target_name;
-      funcs_parse_functions.dealloc_function();
+      set_target_name(&vars_parse_functions, selected->name, strlen(selected->name) + 1);
+      deallocate_parser(&funcs_parse_functions);
  
    }
  
@@ -362,88 +454,7 @@ int main(int argc, char **argv)
 
    // loop for symbols selected for edit until empty return is entered below.
    do {
-       // Get the symbol list.
-       run_parse(&vars_parse_functions, false);
-
-       // Get first list entry
-       vars_ptr = vars_symbol_list_head;
-
-       enum symboltype sym_type_to_find = invalid_type;
-
-       // Walk the list of locations for the given symbol.
-       while (NULL != vars_ptr && vars_ptr->filename != NULL) {
-
-           // For the first, and each unique filename in the vars linked list
-           // get the list of symbols for the filename in current list entry.
-           if ((NULL == symbol_filename) ||
-               (strcmp(symbol_filename, vars_ptr->filename) != 0)) {
-               symbol_filename = vars_ptr->filename;
-
-               // Set the file to parse.
-               funcs_parse_functions.target_name = symbol_filename;
-
-               // Get all symbols for the given file.
-               run_parse(&funcs_parse_functions, false);
-           }
-
-           // Get the first list entry for the symbols in the given file.
-           funcs_ptr = funcs_symbol_list_head;
-
-           // For all symbols in current file look for the given symbol.
-           while (NULL != funcs_ptr) {
-
-               // If the line number reported by ctags and grep are the
-               // same, this is where the symbol is defined.
-               if ((vars_ptr->linenum == funcs_ptr->linenum)) {
-                   printf("\n%d) Defined here:\n", vars_ptr->header.index);
-                   funcs_parse_functions.reference_print_function(funcs_ptr);
-                   vars_parse_functions.print_function(vars_ptr);
-                   vars_ptr->sym_type = funcs_ptr->sym_type;
-                   sym_type_to_find = funcs_ptr->sym_type;
-               }
-
-               // Check for the given symbol between entries in the funcs list.
-               if (funcs_ptr->linenum < vars_ptr->linenum &&
-                   (NULL == funcs_ptr->header.next ||
-                   funcs_ptr->header.next->linenum > vars_ptr->linenum)) {
-
-                   // if the funcs list entry is a function, assume calling the
-                   // given symbol.
-                   if (func == sym_type_to_find) {
-                       printf("\n%d) Called by:\n", vars_ptr->header.index);
-                   }
-                   // Otherwise a "reference."
-                   else {
-                       printf("\n%d) Referenced here:\n", vars_ptr->header.index);
-                   }
-
-               }
-               // The given symbol is not in the range for the current funcs entry.
-               else {
-                   funcs_ptr = funcs_ptr->header.next;
-                   continue;
-               }
-
-               funcs_parse_functions.reference_print_function(funcs_ptr);
-               printf(" :\n");
-               vars_parse_functions.reference_print_function(vars_ptr);
-
-               // Go back to the first entry in the funcs list, break for the next
-               // location for the given symbol.
-               funcs_ptr = funcs_symbol_list_head;
-               break;
-           }
-
-           // Get the list entry for the next location of the given symbol.
-           vars_ptr = vars_ptr->header.next;
-           printf("\n\n");
-           if (vars_ptr) {
-              printf("%s: vars_ptr->filename: %s\n", __func__, vars_ptr->filename);
-           }
-           else {
-              printf("%s: vars_ptr->filename: NULL\n", __func__);
-           }
-       }
+       find_symbols();
 
        // Pick a symbol, from the displayed list, by index number.
        printf("Select a location of symbol to edit\n");
@@ -458,8 +469,8 @@ int main(int argc, char **argv)
        }
 
        // Clean up the lists.
-       funcs_parse_functions.dealloc_function();
-       vars_parse_functions.dealloc_function();
+       deallocate_parser(&funcs_parse_functions);
+       deallocate_parser(&vars_parse_functions);
 
    // Repeat for next selection, empty return from select quits.
    } while (NULL != selected);

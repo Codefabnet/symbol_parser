@@ -4,15 +4,15 @@
 // struct symbol_def list head pointer for vars_parse_functions struct.
 struct symbol_def *vars_symbol_list_head = NULL;
 
-// Command string to grep for all instances of a given symbol.
-const char *const vars_command_string = "grep --include=*.h --include=*.c -IRnw %s *"; 
+// Command string to grep for all instances of a given symbol. No recursion.
+const char *const vars_command_string = "grep --include=*.h --include=*.c -Inw %s *";
 
 // Helper functions, data structs and schema for vars parser.
-struct parse_functions vars_parse_functions = { 
+struct parse_functions vars_parse_functions = {
     .command_string = vars_command_string,
     .head = &vars_symbol_list_head,
     .alloc_function = allocate_vars_symbol,
-    .dealloc_function = deallocate_vars_symbol,
+    .dealloc_function = deallocate_parser,
     .line_schema = {{.symbol_idx = filename_idx,
                        .delimiter = ":",
                        .parse_function = parse_default},
@@ -36,7 +36,7 @@ struct parse_functions vars_parse_functions = {
 //
 // Description: Convert the string at bufptr to an integer line number.
 //
-// Parameters: bufptr - Pointer to the line number of the symbol in the 
+// Parameters: bufptr - Pointer to the line number of the symbol in the
 //                      grep output.
 //
 // Return: line number
@@ -95,11 +95,16 @@ void print_vars_file_symbols_line(struct symbol_def *symbol)
 
 }
 
+void print_vars_file_reference_line(struct symbol_def *symbol)
+{
+    printf("%ld: %s\n", symbol->linenum, symbol->prototype);
+}
+
 
 //*****************************************************************************
 // Function: deallocate_vars_symbol
 //
-// Description: Calls the common deallocate_symbol() function to free
+// Description: Calls the common deallocate_symbol_list() function to free
 //              the struct symbol_def list for the vars parser.
 //
 // Parameters: void
@@ -108,10 +113,11 @@ void print_vars_file_symbols_line(struct symbol_def *symbol)
 //
 //*****************************************************************************
 
-void deallocate_vars_symbol(void)
-{
-    deallocate_symbol(&vars_symbol_list_head);
-}
+//void deallocate_vars_symbols(void)
+//{
+//    free_target_name(&vars_parser_functions);
+//    deallocate_symbol_list(&vars_symbol_list_head);
+//}
 
 
 //*****************************************************************************

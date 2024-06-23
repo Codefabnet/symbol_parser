@@ -12,7 +12,7 @@ struct parse_functions funcs_parse_functions = {
     .command_string = funcs_command_string,
     .head = &funcs_symbol_list_head,
     .alloc_function = allocate_funcs_symbol,
-    .dealloc_function = deallocate_funcs_symbol,
+    .dealloc_function = deallocate_parser,
     .line_schema = {{.symbol_idx = name_idx,
                        .delimiter = " ",
                        .parse_function = parse_default},
@@ -98,24 +98,17 @@ bool skip_funcs_symbol(struct symbol_def *symbol)
 //    return ((symbol->sym_type != func) && (symbol->sym_type != var));
     return ((symbol->sym_type != func) &&
             (symbol->sym_type != var)  &&
-            (symbol->sym_type != proto)  &&
+//            (symbol->sym_type != proto)  &&
             (symbol->sym_type != strct)); //  &&
 //            (symbol->sym_type != tdef)  &&
 //            (symbol->sym_type != macro));
 }
 
-void deallocate_funcs_symbol(void)
-{
-    deallocate_symbol(&funcs_symbol_list_head);
-}
-
-void print_vars_file_reference_line(struct symbol_def *symbol)
-{
-    printf("%ld: %s\n", symbol->linenum, symbol->prototype);
-//    printf("%d\t%s\n", symbol->linenum, symbol->prototype);
-
-}
-
+//void deallocate_funcs_symbols(void)
+//{
+//    free_target_name(&funcs_parser_functions);
+//    deallocate_symbol_list(&funcs_symbol_list_head);
+//}
 
 void print_funcs_file_symbols_line(struct symbol_def *symbol)
 {

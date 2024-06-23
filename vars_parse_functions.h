@@ -8,5 +8,5 @@ extern struct parse_functions vars_parse_functions;
 void *parse_vars_line_number( char *bufptr );
 bool skip_vars_symbol(struct symbol_def *s_table);
 void print_vars_file_symbols_line(struct symbol_def *s_table);
-void deallocate_vars_symbol(void);
+void deallocate_vars_symbols(void);
 struct symbol_def *allocate_vars_symbol(void);
