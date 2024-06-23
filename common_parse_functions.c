@@ -8,9 +8,9 @@
 //
 // Description: #include "common_parse_functions.h"
 //
-// Parameters: 
+// Parameters:
 //
-// Return: 
+// Return:
 //
 //*****************************************************************************
 void set_target_name(struct parse_functions *const parser_functions,
@@ -30,9 +30,9 @@ void set_target_name(struct parse_functions *const parser_functions,
 //
 // Description: }
 //
-// Parameters: 
+// Parameters:
 //
-// Return: 
+// Return:
 //
 //*****************************************************************************
 void free_target_name(struct parse_functions *const parser_functions)
@@ -48,9 +48,9 @@ void free_target_name(struct parse_functions *const parser_functions)
 //
 // Description: }
 //
-// Parameters: 
+// Parameters:
 //
-// Return: 
+// Return:
 //
 //*****************************************************************************
 void deallocate_parser(struct parse_functions *const parser_functions)
@@ -366,19 +366,26 @@ struct symbol_def *get_symbol_selection(struct parse_functions *parse_functions)
    if (0 != index) {
        selected = get_symbol_indexed(parse_functions->head, index);
    }
-   // If the first char is 'U' push the symbol at the index and use the name 
-   // member as the target_name for the new parse. 
+   // If the first char is 'U' push the symbol at the index and use the name
+   // member as the target_name for the new parse.
 
 //   strncpy(target_name, selected->name, TARGET_NAME_SIZE);
 //   find_symbol():
    return selected;
 }
 
-void find_symbols()
+void find_symbols(const char *const target_name)
 {
     struct symbol_def *vars_ptr;
     struct symbol_def *funcs_ptr;
     char *symbol_filename = NULL;
+
+    deallocate_parser(&funcs_parse_functions);
+    deallocate_parser(&vars_parse_functions);
+
+    set_target_name(&vars_parse_functions,
+            target_name,
+            strlen(target_name) + 1);
 
     // Get the symbol list.
     run_parse(&vars_parse_functions, false);
@@ -398,7 +405,9 @@ void find_symbols()
             symbol_filename = vars_ptr->filename;
 
             // Set the file to parse.
-            set_target_name(&funcs_parse_functions, symbol_filename, strlen(symbol_filename) + 1);
+            set_target_name(&funcs_parse_functions,
+                    symbol_filename,
+                    strlen(symbol_filename) + 1);
 
             // Get all symbols for the given file.
             run_parse(&funcs_parse_functions, false);

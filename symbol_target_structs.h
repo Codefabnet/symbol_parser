@@ -24,7 +24,7 @@ enum symboltype {
 // Line read from ctags output...
 // |-symbol name-|-filename-|-prototype-|-symbol type-|-line number-|
 // indexes into the the symbol array member of the symbol_def struct.
-// Used to store pointers to the symbol attributes members of the 
+// Used to store pointers to the symbol attributes members of the
 // symbol_def struct.
 enum symbol_fields {
     name_idx        = 0,
@@ -40,12 +40,12 @@ enum symbol_fields {
 };
 
 struct symbol_def;
-//********************************************* 
+//*********************************************
 // struct line_schema
-//********************************************* 
+//*********************************************
 // structure defining the fields of a line
 // representing a symbol, output from ctags
-//********************************************* 
+//*********************************************
 struct line_schema {
    enum symbol_fields symbol_idx;
    // delimmiter for the given field in a line.
@@ -59,14 +59,15 @@ struct parse_functions;
 typedef void (*print_file_symbols_function)(struct symbol_def *symbol);
 typedef bool (*symbol_skip_function)(struct symbol_def *symbol);
 typedef struct symbol_def *(*symbol_alloc_func_t)(void);
-typedef void(*symbol_dealloc_func_t)(struct parse_functions);
+typedef void(*symbol_dealloc_func_t)(
+        struct parse_functions *const parser_functions);
 
-//************************************************************ 
+//************************************************************
 // struct parse_functions
-//************************************************************ 
+//************************************************************
 // Structure of parser helper functions used to parse each
 // line of source code.
-//************************************************************ 
+//************************************************************
 struct parse_functions {
    // template string for the read file command.
    const char *command_string;
@@ -90,12 +91,12 @@ struct parse_functions {
 
 };
 
-//******************************************* 
+//*******************************************
 // struct symbol_def_hdr
-//******************************************* 
+//*******************************************
 // Linked list node struct with information
 // about the line read from a source file.
-//******************************************* 
+//*******************************************
 struct symbol_def_hdr {
     struct symbol_def *next;
     struct symbol_def **head;
@@ -108,7 +109,7 @@ struct symbol_def_hdr {
 //******************************************************************************
 // struct symbol_def
 //******************************************************************************
-// Symbol definition structure, contains symbol information parsed from a line 
+// Symbol definition structure, contains symbol information parsed from a line
 // of ctags output, including symbol location. Each line of output from ctags
 // repesents a symbol.
 //******************************************************************************

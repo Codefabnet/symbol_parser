@@ -8,7 +8,7 @@ struct symbol_def *funcs_symbol_list_head = NULL;
 const char *const funcs_command_string = "echo %s | ctags --sort=no --c-kinds=+p --filter=yes --fields=nk -x";
 
 // helper functions, data structs and schema for funcs parser.
-struct parse_functions funcs_parse_functions = { 
+struct parse_functions funcs_parse_functions = {
     .command_string = funcs_command_string,
     .head = &funcs_symbol_list_head,
     .alloc_function = allocate_funcs_symbol,
@@ -88,13 +88,13 @@ void *parse_funcs_symbol_type( char *bufptr )
 
    };
 
-   return (void *)rval; 
+   return (void *)rval;
 }
 
 
 bool skip_funcs_symbol(struct symbol_def *symbol)
 {
-    symbol->sym_type = (enum symboltype)parse_funcs_symbol_type(symbol->symboltype); 
+    symbol->sym_type = (enum symboltype)parse_funcs_symbol_type(symbol->symboltype);
 //    return ((symbol->sym_type != func) && (symbol->sym_type != var));
     return ((symbol->sym_type != func) &&
             (symbol->sym_type != var)  &&

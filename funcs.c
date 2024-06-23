@@ -1,5 +1,6 @@
 #include "funcs.h"
 
+#define TARGET_NAME_SIZE 48
 //*****************************************************************************
 // Function: main
 //
@@ -26,20 +27,22 @@ int main(int argc, char **argv)
    struct parse_functions *parse_functions;
    bool select_symbol_from_file;
    struct symbol_def *selected;
- 
+   char target_name[TARGET_NAME_SIZE];
+
    // Called as the "vars" application.
    // Search files in the current directory for a given symbol name.
    if (strstr(argv[0], "vars") != NULL) {
- 
+
        parse_functions = &vars_parse_functions;
        select_symbol_from_file = false;
    } else {
- 
+
        parse_functions = &funcs_parse_functions;
        select_symbol_from_file = true;
    }
- 
+
    if (2 == argc) {
+       strncpy(target_name, argv[1], strlen(argv[1]) + 1);
        set_target_name(parse_functions, argv[1], strlen(argv[1]) + 1);
    }
    else {
@@ -50,34 +53,32 @@ int main(int argc, char **argv)
            printf("Add symbol name parameter for locations where a symbol is used.");
        }
        printf("\n");
- 
+
        return 1;
    }
- 
+
    // TODO: not sure this makes sense for anything but funcs_parse_functions.
    if (select_symbol_from_file) {
- 
+
       run_parse(parse_functions, true);
- 
+
       // TODO: not sure this makes sense for anything but funcs_parse_functions.
       printf("Select a symbol in %s\n", parse_functions->target_name);
       selected = get_symbol_selection(parse_functions);
- 
+
       if (NULL == selected) {
          deallocate_parser(&funcs_parse_functions);
          return EXIT_SUCCESS;
       }
- 
-      set_target_name(&vars_parse_functions, selected->name, strlen(selected->name) + 1);
-      deallocate_parser(&funcs_parse_functions);
- 
+
+      strncpy(target_name, selected->name, strlen(selected->name) + 1);
    }
- 
+
    // List locations of the symbol selected above, in vars_parse_functions.name.
 
    // loop for symbols selected for edit until empty return is entered below.
    do {
-       find_symbols();
+       find_symbols(target_name);
 
        // Pick a symbol, from the displayed list, by index number.
        printf("Select a location of symbol to edit\n");
@@ -91,12 +92,16 @@ int main(int argc, char **argv)
           run_vim(selected);
        }
 
-       // Clean up the lists.
-       deallocate_parser(&funcs_parse_functions);
-       deallocate_parser(&vars_parse_functions);
+       if (NULL != selected) {
+           strncpy(target_name, selected->name, strlen(selected->name) + 1);
+       }
 
    // Repeat for next selection, empty return from select quits.
    } while (NULL != selected);
+
+   // Clean up the lists.
+   deallocate_parser(&funcs_parse_functions);
+   deallocate_parser(&vars_parse_functions);
 
    printf("\n");
 
