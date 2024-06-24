@@ -1,5 +1,5 @@
 #include "funcs.h"
-#include "symbol_table_functions.h"
+#include "symbol_definition_functions.h"
 
 
 

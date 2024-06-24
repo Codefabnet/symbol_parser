@@ -5,7 +5,7 @@ SOURCES := funcs.c \
            vars_parse_functions.c \
            funcs_parse_functions.c \
            common_parse_functions.c \
-           symbol_table_functions.c
+           symbol_definition_functions.c
 
 COMMON_HEADERS := symbol_target_structs.h
 
@@ -14,7 +14,7 @@ OBJECTS := $(addprefix $(OBJDIR)/, \
              funcs_parse_functions.o \
              vars_parse_functions.o \
              common_parse_functions.o \
-             symbol_table_functions.o \
+             symbol_definition_functions.o \
 	     )
 all: $(TARGETS)
 
