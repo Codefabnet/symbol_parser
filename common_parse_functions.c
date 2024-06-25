@@ -6,7 +6,7 @@
 //*****************************************************************************
 // Function: set_target_name
 //
-// Description: #include "common_parse_functions.h"
+// Description: 
 //
 // Parameters:
 //
@@ -46,11 +46,11 @@ void free_target_name(struct parse_functions *const parser_functions)
 //*****************************************************************************
 // Function: deallocate_parser
 //
-// Description: }
+// Description: Free memory allocated by the parser.
 //
-// Parameters:
+// Parameters: parser_functions - The struct defining the parser.
 //
-// Return:
+// Return: void
 //
 //*****************************************************************************
 void deallocate_parser(struct parse_functions *const parser_functions)
@@ -59,11 +59,33 @@ void deallocate_parser(struct parse_functions *const parser_functions)
     deallocate_symbol_list(parser_functions->head);
 }
 
+
+//*****************************************************************************
+// Function: parse_default
+//
+// Description: Default to return the full string.
+//
+// Parameters: bufptr - Pointer to the file operation output line.
+//
+// Return:
+//
+//*****************************************************************************
 void * parse_default( char *bufptr )
 {
    return (void *)bufptr;
 }
 
+
+//*****************************************************************************
+// Function: parse_proto_string
+//
+// Description: Trim leading spaces.
+//
+// Parameters: bufptr - Pointer to the file operation output line.
+//
+// Return:
+//
+//*****************************************************************************
 void * parse_proto_string( char *bufptr )
 {
 
@@ -73,27 +95,6 @@ void * parse_proto_string( char *bufptr )
     return (void *)bufptr;
 }
 
-#if 0
-void * parse_proto_string( char *bufptr )
-{
-    char *ds_ptr = NULL;
-
-    if ((NULL != (ds_ptr = strchr(bufptr, ';')))) {
-        *(ds_ptr + 1) = '\0';
-    }
-    if ((NULL != (ds_ptr = strchr(bufptr, '$')))) {
-        if (*(ds_ptr - 1) != ';') {
-            *ds_ptr++ = ';';
-        }
-        *ds_ptr = '\0';
-    }
-    if (bufptr[1] == '^') {
-        bufptr += 2;
-    }
-
-    return (void *)bufptr;
-}
-#endif
 
 //*********************************************************************************
 // Function: read_data
@@ -368,7 +369,7 @@ struct symbol_def *get_symbol_selection(struct parse_functions *parse_functions)
    }
    // If the first char is 'U' push the symbol at the index and use the name
    // member as the target_name for the new parse.
-
+// For tree view:
 //   strncpy(target_name, selected->name, TARGET_NAME_SIZE);
 //   find_symbol():
    return selected;
@@ -453,7 +454,6 @@ void find_symbols(const char *const target_name)
 
             vars_ptr->link_index = funcs_ptr;
 
-            funcs_parse_functions.print_function(funcs_ptr);
             funcs_parse_functions.reference_print_function(funcs_ptr);
             printf(" :\n");
             vars_parse_functions.reference_print_function(vars_ptr);
@@ -467,12 +467,6 @@ void find_symbols(const char *const target_name)
         // Get the list entry for the next location of the given symbol.
         vars_ptr = vars_ptr->header.next;
         printf("\n\n");
-        if (vars_ptr) {
-           printf("%s: vars_ptr->filename: %s\n", __func__, vars_ptr->filename);
-        }
-        else {
-           printf("%s: vars_ptr->filename: NULL\n", __func__);
-        }
     }
 }
 

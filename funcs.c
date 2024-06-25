@@ -57,26 +57,28 @@ int main(int argc, char **argv)
        return 1;
    }
 
-   // TODO: not sure this makes sense for anything but funcs_parse_functions.
    if (select_symbol_from_file) {
 
-      run_parse(parse_functions, true);
+      // Run ctags for the filename in target_name, build a
+      // list of symbols in that file.
+      run_parse(&funcs_parse_functions, true);
 
-      // TODO: not sure this makes sense for anything but funcs_parse_functions.
+      // Select a struct symbol_def from that list of symbols.
       printf("Select a symbol in %s\n", parse_functions->target_name);
       selected = get_symbol_selection(parse_functions);
 
+      // No symbol was selected.
       if (NULL == selected) {
          deallocate_parser(&funcs_parse_functions);
          return EXIT_SUCCESS;
       }
 
+      // Save the symbol name to be used as the target for the vars search.
       strncpy(target_name, selected->name, strlen(selected->name) + 1);
    }
 
-   // List locations of the symbol selected above, in vars_parse_functions.name.
-
-   // loop for symbols selected for edit until empty return is entered below.
+   // Grep to find all locations of the symbol selected above,
+   //  list and open in editor. loop for symbols selected for edit until empty return is entered below.
    do {
        find_symbols(target_name);
 
@@ -90,10 +92,6 @@ int main(int argc, char **argv)
 
           // Open the location of the selected symbol in vim.
           run_vim(selected);
-       }
-
-       if (NULL != selected) {
-           strncpy(target_name, selected->name, strlen(selected->name) + 1);
        }
 
    // Repeat for next selection, empty return from select quits.

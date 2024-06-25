@@ -98,7 +98,7 @@ bool skip_funcs_symbol(struct symbol_def *symbol)
 //    return ((symbol->sym_type != func) && (symbol->sym_type != var));
     return ((symbol->sym_type != func) &&
             (symbol->sym_type != var)  &&
-//            (symbol->sym_type != proto)  &&
+            (symbol->sym_type != proto)  &&
             (symbol->sym_type != strct)); //  &&
 //            (symbol->sym_type != tdef)  &&
 //            (symbol->sym_type != macro));
