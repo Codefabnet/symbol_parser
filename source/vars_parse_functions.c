@@ -91,39 +91,28 @@ void print_vars_file_symbols_line(struct symbol_def *symbol)
             symbol->linenum,
             symbol->filename,
             symbol->prototype);
-//    printf("%d\t%s\n", symbol->linenum, symbol->prototype);
-
 }
 
+
+//*****************************************************************************
+// Function: print_vars_file_reference_line
+//
+// Description: Print information about the given struct symbol_def.
+//
+// Parameters: symbol - struct symbol_def to print.
+//
+// Return: void
+//
+//*****************************************************************************
 void print_vars_file_reference_line(struct symbol_def *symbol)
 {
     printf("%ld: %s\n", symbol->linenum, symbol->prototype);
 }
 
-
-//*****************************************************************************
-// Function: deallocate_vars_symbol
-//
-// Description: Calls the common deallocate_symbol_list() function to free
-//              the struct symbol_def list for the vars parser.
-//
-// Parameters: void
-//
-// Return: void
-//
-//*****************************************************************************
-
-//void deallocate_vars_symbols(void)
-//{
-//    free_target_name(&vars_parser_functions);
-//    deallocate_symbol_list(&vars_symbol_list_head);
-//}
-
-
 //*****************************************************************************
 // Function: allocate_vars_symbol
 //
-// Description: Malloc and initialize new struct symbol_def struct.
+// Description: Malloc and initialize new symbol_def struct.
 //
 // Parameters: void
 //
@@ -149,27 +138,6 @@ struct symbol_def *allocate_vars_symbol(void)
    symbol_ptr->symbol[linenum_idx]     = (void**)&symbol_ptr->linenum;
    symbol_ptr->symbol[null_term_idx]   = NULL;
 
-#if 0
-   symbol_ptr->line_schema[filename_v_idx]      = (struct line_schema) {.symbol = (void**)&symbol_ptr->filename,
-                                                          .delimiter =  ":",
-                                                          .parse_function = parse_default};
-   symbol_ptr->line_schema[linenum_v_idx]   = (struct line_schema) {.symbol = (void**)&symbol_ptr->linenum,
-                                                          .delimiter = ":",
-                                                          .parse_function = parse_vars_line_number};
-   symbol_ptr->line_schema[prototype_v_idx] = (struct line_schema) {.symbol = (void**)&symbol_ptr->prototype,
-                                                          .delimiter = "\n",
-                                                          .parse_function = parse_proto_string};
-   symbol_ptr->line_schema[null_term_v_idx] = (struct line_schema) {.symbol = NULL,
-                                                          .delimiter = NULL,
-                                                          .parse_function = NULL};
-#endif
-#if 0
-   symbol_ptr->print_function = print_vars_file_symbols_line;
-   symbol_ptr->reference_print_function = print_vars_file_reference_line;
-   symbol_ptr->skip_function = skip_vars_symbol;
-   symbol_ptr->dealloc_function = deallocate_vars_symbol;
-   symbol_ptr->head = &vars_symbol_head;
-#endif
    return symbol_ptr;
 
 }

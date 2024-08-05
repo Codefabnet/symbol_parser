@@ -6,11 +6,14 @@
 //*****************************************************************************
 // Function: set_target_name
 //
-// Description: 
+// Description: Allocate and store the target_name for the given
+//              parser_functions object.
 //
-// Parameters:
+// Parameters: parser_functions - Pointer to the parser_functions struct.
+//             target_name - The target_name for parser operations.
+//             name_length - Size of the target name.
 //
-// Return:
+// Return: void
 //
 //*****************************************************************************
 void set_target_name(struct parse_functions *const parser_functions,
@@ -28,11 +31,11 @@ void set_target_name(struct parse_functions *const parser_functions,
 //*****************************************************************************
 // Function: free_target_name
 //
-// Description: }
+// Description: Free memory allocated for the target_name.
 //
-// Parameters:
+// Parameters: Pointer to the parse_functions struct to free target_name.
 //
-// Return:
+// Return: void
 //
 //*****************************************************************************
 void free_target_name(struct parse_functions *const parser_functions)
@@ -67,7 +70,7 @@ void deallocate_parser(struct parse_functions *const parser_functions)
 //
 // Parameters: bufptr - Pointer to the file operation output line.
 //
-// Return:
+// Return: void
 //
 //*****************************************************************************
 void * parse_default( char *bufptr )
@@ -83,7 +86,7 @@ void * parse_default( char *bufptr )
 //
 // Parameters: bufptr - Pointer to the file operation output line.
 //
-// Return:
+// Return: void
 //
 //*****************************************************************************
 void * parse_proto_string( char *bufptr )

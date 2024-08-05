@@ -1,13 +1,37 @@
+############################################################
+# All targets
+############################################################
+
 TARGETS := funcs vars
-OBJDIR := obj
 
-SOURCES := funcs.c \
-           vars_parse_functions.c \
-           funcs_parse_functions.c \
-           common_parse_functions.c \
-           symbol_definition_functions.c
+############################################################
+# Common build rules
+############################################################
 
-COMMON_HEADERS := symbol_target_structs.h
+OBJDIR := ./obj
+OUTPUTDIR := ./output
+SOURCEDIR := ./source
+
+COMPILEFLAGS := -g -Wall
+
+all: $(TARGETS)
+
+$(OUTPUTDIR):
+	mkdir $(OUTPUTDIR)
+
+$(OBJDIR):
+	mkdir $(OBJDIR)
+
+############################################################
+
+HEADERS := $(addprefix $(SOURCEDIR)/, \
+            funcs.h \
+            funcs_parse_functions.h \
+            vars_parse_functions.h \
+            common_parse_functions.h \
+            symbol_definition_functions.h \
+            symbol_target_structs.h \
+        )
 
 OBJECTS := $(addprefix $(OBJDIR)/, \
              funcs.o \
@@ -16,22 +40,20 @@ OBJECTS := $(addprefix $(OBJDIR)/, \
              common_parse_functions.o \
              symbol_definition_functions.o \
 	     )
-all: $(TARGETS)
 
 $(TARGETS): $(OBJECTS)
-	gcc $(OBJECTS) -o $@ 
+	gcc $(OBJECTS) -o $(OUTPUTDIR)/$@ 
 
-$(OBJDIR)/%.o : %.c %.h $(COMMON_HEADERS)
+$(OBJDIR)/%.o : $(SOURCEDIR)/%.c $(HEADERS)
 	gcc -Wall -g -c $< -o $@
+
+############################################################
+
+$(TARGETS): | $(OUTPUTDIR)
 
 $(OBJECTS): | $(OBJDIR)
 
-$(OBJDIR):
-	mkdir $(OBJDIR)
-
-.PHONY: clean
-
 clean:
-	rm -f $(TARGETS)
-	rm -f $(OBJDIR)/*.o
+	rm -rf $(OUTPUTDIR)
+	rm -rf $(OBJDIR)
 

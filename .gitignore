@@ -2,9 +2,8 @@
 *.s
 *.mks
 /obj/
-/.vscode/
-funcs
-vars
+/build/
+/output/
 tags
 funcs.code-workspace
 temp.*

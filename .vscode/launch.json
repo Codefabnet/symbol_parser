@@ -1,0 +1,45 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "type": "cppdbg",
+            "name": "funcs",
+            "request": "launch",
+            "preLaunchTask": "make",
+            "cwd": "${workspaceRoot}/source",
+            "program": "${workspaceRoot}/output/funcs",
+            "args": ["common_parse_functions.c"]
+        },
+        {
+            "type": "cppdbg",
+            "name": "vars",
+            "request": "launch",
+            "preLaunchTask": "make",
+            "cwd": "${workspaceRoot}/source",
+            "program": "${workspaceRoot}/output/vars",
+            "args": ["read_data"]
+        },
+        {
+            "type": "cppdbg",
+            "name": "CMake funcs",
+            "request": "launch",
+            "preLaunchTask": "CMake",
+            "cwd": "${workspaceRoot}/source",
+            "program": "${workspaceRoot}/build/output/funcs",
+            "args": ["common_parse_functions.c"]
+        },
+        {
+            "type": "cppdbg",
+            "name": "CMake vars",
+            "request": "launch",
+            "preLaunchTask": "CMake",
+            "cwd": "${workspaceRoot}/source",
+            "program": "${workspaceRoot}/build/output/vars",
+            "args": ["read_data"]
+        }
+    ]
+}

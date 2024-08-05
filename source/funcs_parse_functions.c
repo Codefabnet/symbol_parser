@@ -104,22 +104,19 @@ bool skip_funcs_symbol(struct symbol_def *symbol)
 //            (symbol->sym_type != macro));
 }
 
-//void deallocate_funcs_symbols(void)
-//{
-//    free_target_name(&funcs_parser_functions);
-//    deallocate_symbol_list(&funcs_symbol_list_head);
-//}
 
+//*****************************************************************************
+// Function: print_funcs_file_symbols_line
+//
+// Description: Print information about the given struct symbol_def.
+//
+// Parameters: symbol - struct symbol_def to print.
+//
+// Return: void
+//
+//*****************************************************************************
 void print_funcs_file_symbols_line(struct symbol_def *symbol)
 {
-//    if (symbol->sym_type == func) {
-//        printf("%d\t%s\n", symbol->linenum, symbol->name);
-//        printf("%d: %s\n\t%s\n\tfilename: %s \tlinenum: %ld\n\n",
-//                symbol->header.index,
-//                symbol->name,
-//                symbol->prototype,
-//                symbol->filename,
-//                symbol->linenum);
         printf("%d: %s - %s(%ld)\n\t%s\t%s\n\n",
                 symbol->header.index,
                 symbol->name,
@@ -127,25 +124,40 @@ void print_funcs_file_symbols_line(struct symbol_def *symbol)
                 symbol->linenum,
                 symbol->symboltype,
                 symbol->prototype);
-//        printf("\nFile: %s\n%d: \nFunction \n%ld: %s", symbol->filename, symbol->index, symbol->linenum, symbol->prototype);
-//    }
 }
 
 
+//*****************************************************************************
+// Function: print_funcs_file_reference_line
+//
+// Description: Print information about the given struct symbol_def.
+//
+// Parameters: symbol - struct symbol_def to print.
+//
+// Return: void
+//
+//*****************************************************************************
 void print_funcs_file_reference_line(struct symbol_def *symbol)
 {
-//    if (symbol->sym_type == func) {
-//        printf("%d\t%s\n", symbol->linenum, symbol->name);
-//        printf("%d: %s\n\t%s\n\tSource File: %s \tReference Function Line Number: %ld\n\n", symbol->index, symbol->name, symbol->prototype, symbol->filename, symbol->linenum);
         printf("%s\n%ld: %s\n",
                 symbol->filename,
                 symbol->linenum,
                 symbol->prototype);
-//    }
 }
 
 
 // The schema array and the operation functions determine the parse type, in this case a "funcs" parse.
+
+//*****************************************************************************
+// Function: allocate_funcs_symbol
+//
+// Description:  Malloc and initialize new symbol_def struct.
+//
+// Parameters: none
+//
+// Return: Pointer to new struct symbol_def.
+//
+//*****************************************************************************
 struct symbol_def *allocate_funcs_symbol() {
 
    struct symbol_def *symbol_ptr;
@@ -155,7 +167,6 @@ struct symbol_def *allocate_funcs_symbol() {
    if (NULL == symbol_ptr) {
        return NULL;
    }
-//   symbol_ptr = allocate_symbol(&funcs_symbol_list_head);
    symbol_ptr->symbol[name_idx]        = (void**)&symbol_ptr->name;
    symbol_ptr->symbol[filename_idx]    = (void**)&symbol_ptr->filename;
    symbol_ptr->symbol[prototype_idx]   = (void**)&symbol_ptr->prototype;
@@ -163,86 +174,7 @@ struct symbol_def *allocate_funcs_symbol() {
    symbol_ptr->symbol[symbol_enum_idx] = (void**)&symbol_ptr->sym_type;
    symbol_ptr->symbol[linenum_idx]     = (void**)&symbol_ptr->linenum;
    symbol_ptr->symbol[null_term_idx]   = NULL;
-#if 0
-   symbol_ptr->line_schema[name_f_idx]      = (struct line_schema) {.symbol = (void**)&symbol_ptr->name,
-                                                          .delimiter = "\t",
-                                                          .parse_function = parse_default};
-   symbol_ptr->line_schema[filename_f_idx]  = (struct line_schema) {.symbol = (void**)&symbol_ptr->filename,
-                                                          .delimiter = "\t",
-                                                          .parse_function = parse_default};
-   symbol_ptr->line_schema[prototype_f_idx] = (struct line_schema) {.symbol = (void**)&symbol_ptr->prototype,
-                                                          .delimiter = "\t",
-                                                          .parse_function = parse_proto_string};
-   symbol_ptr->line_schema[symboltype_f_idx]  = (struct line_schema) {.symbol = (void**)&symbol_ptr->sym_type,
-                                                          .delimiter = "\t",
-                                                          .parse_function = parse_funcs_symbol_type};
-   symbol_ptr->line_schema[linenum_f_idx]   = (struct line_schema) {.symbol = (void**)&symbol_ptr->linenum,
-                                                          .delimiter = "\t",
-                                                          .parse_function = parse_funcs_line_number};
-   symbol_ptr->line_schema[null_term_f_idx] = (struct line_schema) {.symbol = NULL,
-                                                          .delimiter = NULL,
-                                                          .parse_function = NULL};
-#endif
-
-#if 0
-   symbol_ptr->print_function = print_funcs_file_symbols_line;
-   symbol_ptr->reference_print_function = print_funcs_file_reference_line;
-   symbol_ptr->skip_function = skip_funcs_symbol;
-   symbol_ptr->dealloc_function = deallocate_funcs_symbol;
-   symbol_ptr->head = &funcs_symbol_list_head;
    return symbol_ptr;
-#endif
-   return symbol_ptr;
-
-}
-
-void print_funcs_file_symbolsymbol(struct symbol_def *symbol) {
-
-    printf("name = %s\n", symbol->name);
-    printf("file = %s\n", symbol->filename);
-    printf("prototype = %s\n", symbol->prototype);
-    switch (symbol->sym_type) {
-        case macro:
-            printf("symbol type = macro\n");
-            break;
-
-        case var:
-            printf("symbol type = var\n");
-            break;
-
-        case func:
-            printf("symbol type = func\n");
-            break;
-
-        case proto:
-            printf("symbol type = proto\n");
-            break;
-
-        case strct:
-            printf("symbol type = struct\n");
-            break;
-
-        case member:
-            printf("symbol type = struct member\n");
-            break;
-
-        case enm:
-            printf("symbol type = enum\n");
-            break;
-
-        case enmm:
-            printf("symbol type = enum member\n");
-            break;
-
-        case tdef:
-            printf("symbol type = typedef\n");
-            break;
-
-        default:
-            printf("Unknown symbol type\n");
-
-    };
-    printf("line number = %ld\n", symbol->linenum);
 
 }
 
